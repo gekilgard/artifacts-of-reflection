@@ -491,30 +491,7 @@ export default function MapPage() {
 
   return (
     <div className="map-page">
-      {/* Persistent Navigation */}
-      <nav className="map-nav">
-        <div className="map-nav-content">
-          <Link to="/" className="map-nav-brand">
-            <div className="brand-icon">
-              <div className="brand-circle">
-                <div className="brand-inner"></div>
-              </div>
-            </div>
-            <span className="brand-text">Artifacts of Reflection</span>
-          </Link>
-          
-          <div className="map-nav-links">
-            <Link to="/" className="map-nav-link">Home</Link>
-            <Link to="/wall" className="map-nav-link">Wall</Link>
-            <Link to="/map" className="map-nav-link active">Map</Link>
-            <Link to="/submit" className="map-nav-link">Submit</Link>
-          </div>
-          
-          <div className="map-nav-actions">
-            <ThemeToggle />
-          </div>
-        </div>
-      </nav>
+      {/* Use global app navigation only */}
 
       <div className="map-overlay-header">
         <div className="map-overlay-content">

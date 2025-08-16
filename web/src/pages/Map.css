@@ -18,42 +18,8 @@ body.map-active {
   height: 100%;
 }
 
-/* Persistent Navigation Bar */
-.map-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
-  z-index: 2000;
-  height: 64px;
-}
-
-[data-theme="dark"] .map-nav {
-  background: rgba(24, 24, 27, 0.95);
-}
-
-.map-nav-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  padding: 0 var(--space-lg);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.map-nav-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  text-decoration: none;
-  color: var(--color-text-primary);
-  font-weight: 600;
-  font-size: var(--font-size-lg);
-}
+/* Remove map-specific navbar; global navbar is used */
+.map-nav, .map-nav-content, .map-nav-brand, .map-nav-links, .map-nav-actions, .map-nav-link { display: none !important; }
 
 .brand-icon {
   position: relative;
