@@ -95,6 +95,47 @@ function processLocations(items) {
   return processed
 }
 
+// World wrapping controller for infinite seamless scrolling
+function WorldWrapController() {
+  const map = useMap()
+  
+  useEffect(() => {
+    // Set world bounds to prevent infinite zoom out
+    const worldBounds = [
+      [-90, -180], // Southwest corner
+      [90, 180]    // Northeast corner
+    ]
+    
+    // Restrict zoom and set world bounds
+    map.setMaxBounds(worldBounds)
+    map.setMinZoom(1) // Prevent zooming out too far
+    map.setMaxZoom(18)
+    
+    // Handle world wrapping when panning reaches edges
+    const handleMoveEnd = () => {
+      const center = map.getCenter()
+      let { lat, lng } = center
+      
+      // Wrap longitude when crossing edges (like Snake game)
+      if (lng > 180) {
+        lng = lng - 360
+        map.setView([lat, lng], map.getZoom(), { animate: false })
+      } else if (lng < -180) {
+        lng = lng + 360
+        map.setView([lat, lng], map.getZoom(), { animate: false })
+      }
+    }
+    
+    map.on('moveend', handleMoveEnd)
+    
+    return () => {
+      map.off('moveend', handleMoveEnd)
+    }
+  }, [map])
+  
+  return null
+}
+
 // Dynamic tile layer that responds to theme changes
 function DynamicTileLayer() {
   const map = useMap()
@@ -172,20 +213,30 @@ function HeatmapLayer({ points }) {
       map.removeLayer(heatLayerRef.current)
     }
     
-    // Create heatmap data with world wrapping
+    // Create heatmap data with optimized world wrapping
     const baseHeatData = points.map(point => [
       point.lat, 
       point.lng, 
       point.intensity || 1
     ])
     
-    // Create copies for world wrapping (longitude offsets of ±360°)
-    const heatData = []
-    for (let offset = -360; offset <= 360; offset += 360) {
-      baseHeatData.forEach(point => {
-        heatData.push([point[0], point[1] + offset, point[2]])
-      })
-    }
+    // Create strategic copies for seamless wrapping (only what's needed)
+    const heatData = [...baseHeatData]
+    
+    // Add edge copies for seamless wrapping at boundaries
+    baseHeatData.forEach(point => {
+      const [lat, lng, intensity] = point
+      
+      // Add copies near the edges for seamless wrapping
+      if (lng > 90) {
+        // Points near eastern edge also appear on western edge
+        heatData.push([lat, lng - 360, intensity])
+      }
+      if (lng < -90) {
+        // Points near western edge also appear on eastern edge
+        heatData.push([lat, lng + 360, intensity])
+      }
+    })
     
     // Get current zoom level
     const currentZoom = map.getZoom()
@@ -281,21 +332,32 @@ function HeatmapLayer({ points }) {
   return null
 }
 
-// Generate markers with world wrapping
+// Generate optimized markers for seamless world wrapping
 function generateWrappedMarkers(items) {
-  const wrappedMarkers = []
+  const wrappedMarkers = [...items] // Start with original items
   
-  // Create markers for original world and ±360° longitude offsets
-  for (let offset = -360; offset <= 360; offset += 360) {
-    items.forEach(item => {
+  // Add strategic edge copies for seamless wrapping
+  items.forEach(item => {
+    // Add copies near edges for seamless Snake-game-like wrapping
+    if (item.lng > 90) {
+      // Items near eastern edge also appear on western edge
       wrappedMarkers.push({
         ...item,
-        id: `${item.id}_${offset}`, // Unique ID for each wrapped instance
-        lng: item.lng + offset,
-        originalId: item.id // Keep reference to original
+        id: `${item.id}_west`,
+        lng: item.lng - 360,
+        originalId: item.id
       })
-    })
-  }
+    }
+    if (item.lng < -90) {
+      // Items near western edge also appear on eastern edge
+      wrappedMarkers.push({
+        ...item,
+        id: `${item.id}_east`,
+        lng: item.lng + 360,
+        originalId: item.id
+      })
+    }
+  })
   
   return wrappedMarkers
 }
@@ -425,7 +487,9 @@ export default function MapPage() {
         doubleClickZoom={true}
         boxZoom={false}
         keyboard={false}
+        worldCopyJump={false} // Disable Leaflet's default world jumping
       >
+        <WorldWrapController />
         <DynamicTileLayer />
         <HeatmapLayer points={processedPoints} />
         {wrappedMarkers.map(item => (
