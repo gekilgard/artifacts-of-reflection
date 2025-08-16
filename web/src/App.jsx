@@ -12,43 +12,16 @@ const Wall = lazy(() => import('./pages/Wall.jsx'))
 
 function Navigation() {
   const location = useLocation()
-  
-  const navItems = [
-    { path: '/', label: 'Home', description: 'Discover prompts' },
-    { path: '/submit', label: 'Submit', description: 'Share your story' },
-    { path: '/wall', label: 'Wall', description: 'Browse stories' },
-    { path: '/map', label: 'Map', description: 'Explore locations' }
-  ]
-
   return (
-    <nav className="main-nav">
-      <div className="nav-brand">
-        <Link to="/" className="brand-link">
-          <div className="brand-icon">
-            <div className="brand-circle"></div>
-          </div>
-          <span className="brand-text">Artifacts</span>
-        </Link>
+    <nav className="main-nav new-nav">
+      <Link to="/" className="nav-logo">Artifacts of Reflection</Link>
+      <div className="nav-group">
+        <Link to="/" className={`nav-item ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
+        <Link to="/wall" className={`nav-item ${location.pathname === '/wall' ? 'active' : ''}`}>Wall</Link>
+        <Link to="/map" className={`nav-item ${location.pathname === '/map' ? 'active' : ''}`}>Map</Link>
+        <Link to="/submit" className={`nav-item ${location.pathname === '/submit' ? 'active' : ''}`}>Submit</Link>
       </div>
-      
-      <div className="nav-links">
-        {navItems.map(item => (
-          <Link 
-            key={item.path}
-            to={item.path} 
-            className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
-          >
-            <span className="nav-label">{item.label}</span>
-            <span className="nav-description">{item.description}</span>
-          </Link>
-        ))}
-      </div>
-      
-      <div className="nav-actions">
-        <ThemeToggle />
-      </div>
-      
-
+      <div className="nav-actions"><ThemeToggle /></div>
     </nav>
   )
 }
