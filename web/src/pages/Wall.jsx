@@ -144,7 +144,7 @@ export default function Wall() {
 
     const refreshInterval = setInterval(() => {
       loadSubmissions(true)
-    }, 15000) // Refresh every 15 seconds
+    }, 2000) // Refresh every 2 seconds
 
     return () => clearInterval(refreshInterval)
   }, [loadSubmissions])
