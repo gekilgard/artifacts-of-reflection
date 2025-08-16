@@ -50,6 +50,7 @@ export default function Wall() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [newItemIds, setNewItemIds] = useState(new Set())
+  const [newItemCount, setNewItemCount] = useState(0)
 
   const loadSubmissions = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setIsRefreshing(true)
@@ -87,8 +88,13 @@ export default function Wall() {
           
           if (newIds.size > 0) {
             setNewItemIds(newIds)
-            // Clear new item indicators after animation
-            setTimeout(() => setNewItemIds(new Set()), 2000)
+            setNewItemCount(newIds.size)
+            
+            // Clear new item indicators after animation completes
+            setTimeout(() => {
+              setNewItemIds(new Set())
+              setNewItemCount(0)
+            }, 3000)
           }
         }
         
@@ -179,9 +185,14 @@ export default function Wall() {
             {items.length} {items.length === 1 ? 'story' : 'stories'} shared
           </p>
         </div>
-        <div className="refresh-indicator">
+        <div className={`refresh-indicator ${newItemCount > 0 ? 'has-new-items' : ''}`}>
           <div className={`refresh-dot ${isRefreshing ? 'loading' : ''}`}></div>
-          <span>Live updates</span>
+          <span>
+            {newItemCount > 0 
+              ? `${newItemCount} new ${newItemCount === 1 ? 'story' : 'stories'}!` 
+              : 'Live updates'
+            }
+          </span>
         </div>
       </div>
 
