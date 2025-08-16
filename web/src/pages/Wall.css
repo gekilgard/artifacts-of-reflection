@@ -6,19 +6,22 @@
   transition: filter 300ms ease-out;
 }
 
-.wall-page.blur-mode {
+/* When in blur mode, blur all wall items by default */
+.wall-page.blur-mode .wall-item {
   filter: blur(4px);
+  transition: filter 300ms ease-out;
 }
 
+/* Keep the hovered item sharp and focused */
 .wall-page.blur-mode .wall-item.hovered {
-  filter: blur(0px) !important;
+  filter: none !important;
   position: relative;
   z-index: 100;
 }
 
-/* Ensure navigation stays sharp during blur mode */
+/* Navigation stays unaffected */
 .wall-page.blur-mode .wall-header {
-  filter: blur(0px);
+  filter: none;
 }
 
 .wall-header {
