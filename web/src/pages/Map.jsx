@@ -77,15 +77,21 @@ function processLocations(items) {
   // Apply fuzzing and relative intensity to groups
   groups.forEach(group => {
     const groupSize = group.items.length
-    // Calculate relative intensity: group size / max group size
-    // This ensures the largest group gets intensity 1.0, smaller groups get proportionally less
-    const relativeIntensity = groupSize / maxGroupSize
+    // Calculate relative intensity with enhanced scaling for better visual distinction
+    // Use exponential scaling to make differences more pronounced
+    const baseIntensity = groupSize / maxGroupSize
+    const enhancedIntensity = Math.pow(baseIntensity, 0.7) // Makes smaller values relatively larger
+    
+    // Ensure minimum visibility for single items but clear distinction
+    const finalIntensity = Math.max(enhancedIntensity, 0.2)
+    
+    console.log(`Location group: ${groupSize} items, base: ${baseIntensity.toFixed(2)}, enhanced: ${enhancedIntensity.toFixed(2)}, final: ${finalIntensity.toFixed(2)}`)
     
     if (groupSize === 1) {
       // Single item, no fuzzing needed
       processed.push({
         ...group.items[0],
-        intensity: relativeIntensity
+        intensity: finalIntensity
       })
     } else {
       // Multiple items, apply fuzzing with relative intensity
@@ -95,7 +101,7 @@ function processLocations(items) {
           ...item,
           lat: fuzzed.lat,
           lng: fuzzed.lng,
-          intensity: relativeIntensity
+          intensity: finalIntensity
         })
       })
     }
@@ -294,7 +300,7 @@ function HeatmapLayer({ points }) {
     // Use relative intensity directly - max should be 1.0 since we normalized
     const dynamicMax = 1.0
     
-    // Create heat layer with anti-artifact settings
+    // Create heat layer with enhanced gradient for better intensity distinction
     heatLayerRef.current = L.heatLayer(heatData, {
       radius: radius,
       blur: blur,
@@ -302,12 +308,13 @@ function HeatmapLayer({ points }) {
       minOpacity: minOpacity,
       maxZoom: 18,
       gradient: {
-        0.0: '#3b82f6',    // Blue
-        0.2: '#06b6d4',    // Cyan  
-        0.4: '#10b981',    // Emerald
-        0.6: '#f59e0b',    // Amber
-        0.8: '#ef4444',    // Red
-        1.0: '#dc2626'     // Dark red
+        0.0: 'rgba(59, 130, 246, 0.1)',   // Very light blue for lowest
+        0.2: '#3b82f6',                   // Blue
+        0.3: '#06b6d4',                   // Cyan  
+        0.5: '#10b981',                   // Emerald
+        0.7: '#f59e0b',                   // Amber
+        0.85: '#ef4444',                  // Red
+        1.0: '#dc2626'                    // Dark red for highest
       }
     }).addTo(map)
   }
