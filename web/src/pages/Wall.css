@@ -11,7 +11,9 @@
 }
 
 .wall-page.blur-mode .wall-item.hovered {
-  filter: blur(0px);
+  filter: blur(0px) !important;
+  position: relative;
+  z-index: 100;
 }
 
 /* Ensure navigation stays sharp during blur mode */
@@ -98,9 +100,10 @@
 }
 
 .wall-item.hovered {
-  z-index: 20;
+  z-index: 100;
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 0 6px 12px rgba(0, 0, 0, 0.15);
+  filter: none !important;
 }
 
 .wall-item.new-item {
