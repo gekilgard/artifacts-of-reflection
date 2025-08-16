@@ -1,0 +1,225 @@
+/* Map Page Styles */
+.map-page {
+  padding: var(--space-lg);
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-lg);
+  gap: var(--space-lg);
+}
+
+.map-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-xs) 0;
+  letter-spacing: -0.02em;
+}
+
+.map-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-weight: 400;
+}
+
+.map-stats {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.stat-item {
+  text-align: center;
+  min-width: 80px;
+}
+
+.stat-number {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-accent);
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Map Container */
+.map-container {
+  position: relative;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  background: var(--color-surface);
+}
+
+.story-map {
+  height: 70vh;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Map Legend */
+.map-legend {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  background: var(--color-surface);
+  padding: var(--space-md);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  min-width: 160px;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .map-legend {
+  background: rgba(24, 24, 27, 0.95);
+}
+
+.legend-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+  text-align: center;
+}
+
+.legend-gradient {
+  margin-bottom: var(--space-sm);
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.legend-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    to right,
+    #3b82f6,
+    #06b6d4,
+    #10b981,
+    #f59e0b,
+    #ef4444,
+    #dc2626
+  );
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.legend-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Loading States */
+.map-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: var(--space-lg);
+}
+
+.map-loading-text {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .map-page {
+    padding: var(--space-md);
+  }
+  
+  .map-header {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .map-stats {
+    align-self: stretch;
+    justify-content: space-around;
+  }
+  
+  .map-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .map-subtitle {
+    font-size: var(--font-size-md);
+  }
+  
+  .story-map {
+    height: 50vh;
+  }
+  
+  .map-legend {
+    position: static;
+    margin-top: var(--space-md);
+    width: 100%;
+  }
+  
+  .map-container {
+    border-radius: var(--border-radius-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-number {
+    font-size: var(--font-size-xl);
+  }
+  
+  .story-map {
+    height: 40vh;
+  }
+}
+
+/* Custom Leaflet Overrides */
+.leaflet-container {
+  background: var(--color-background-secondary);
+}
+
+.leaflet-tile {
+  filter: var(--theme, none);
+}
+
+[data-theme="dark"] .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.8) !important;
+  font-size: 10px !important;
+  padding: 2px 5px !important;
+}
+
+[data-theme="dark"] .leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-text-secondary) !important;
+}
