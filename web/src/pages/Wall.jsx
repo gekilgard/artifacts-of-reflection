@@ -52,6 +52,7 @@ export default function Wall() {
   const [newItemIds, setNewItemIds] = useState(new Set())
   const [newItemCount, setNewItemCount] = useState(0)
   const [removingItemIds, setRemovingItemIds] = useState(new Set())
+  const [hoveredItem, setHoveredItem] = useState(null)
 
   const loadSubmissions = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setIsRefreshing(true)
@@ -201,7 +202,7 @@ export default function Wall() {
   }
 
   return (
-    <div className="wall-page">
+    <div className={`wall-page ${hoveredItem ? 'blur-mode' : ''}`}>
       <div className="wall-header">
         <div>
           <h1 className="wall-title">Stories</h1>
@@ -224,11 +225,13 @@ export default function Wall() {
         {items.map((item, index) => (
           <article 
             key={item.id}
-            className={`wall-item ${newItemIds.has(item.id) ? 'new-item' : ''} ${removingItemIds.has(item.id) ? 'removing-item' : ''}`}
+            className={`wall-item ${newItemIds.has(item.id) ? 'new-item' : ''} ${removingItemIds.has(item.id) ? 'removing-item' : ''} ${hoveredItem === item.id ? 'hovered' : ''}`}
             style={{ 
               animationDelay: `${Math.min(index * 50, 500)}ms` 
             }}
             onClick={() => setSelectedItem(item)}
+            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseLeave={() => setHoveredItem(null)}
           >
             {item.image_url && (
               <img 

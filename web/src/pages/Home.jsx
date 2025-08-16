@@ -24,8 +24,7 @@ export default function Home() {
             <span className="title-secondary">of Reflection</span>
           </h1>
           <p className="hero-description">
-            Discover meaningful objects and the stories they hold. 
-            Each artifact connects us to memories, people, and moments that shape who we are.
+            Widespread, worldwide ethnographic research exploring the meaning of objects and their cultural significance across diverse communities.
           </p>
           <div className="hero-stats">
             <div className="stat-item">
