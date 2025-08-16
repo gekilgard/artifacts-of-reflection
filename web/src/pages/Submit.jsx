@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import './Submit.css'
 
 const MIN = 50
 const MAX = 500
@@ -76,26 +77,118 @@ export default function Submit() {
     }
   }
 
+  // Format the current date for the letter
+  const formatDate = () => {
+    const now = new Date()
+    return now.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+  }
+
   return (
-    <div>
-      <h2>Submit your story</h2>
-      {prompt && <p style={{ fontStyle: 'italic' }}>{prompt.text}</p>}
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-        <label>
-          Where are you uploading from? (City, Country)
-          <input type="text" value={locationText} onChange={e => setLocationText(e.target.value)} placeholder="e.g., Los Angeles, USA" />
-        </label>
-        <label>
-          Image (jpg/png/gif)
-          <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} />
-        </label>
-        <label>
-          Story (50–500 chars)
-          <textarea rows={6} value={text} onChange={e => setText(e.target.value)} />
-        </label>
-        <button disabled={!valid || loading} type="submit">{loading ? 'Submitting…' : 'Submit'}</button>
-      </form>
-      {message && <p>{message}</p>}
+    <div className="submit-page">
+      <div className="letter-container">
+        <div className="letter-paper">
+          {/* Letter Header */}
+          <div className="letter-header">
+            <div className="letter-date">{formatDate()}</div>
+            <div className="letter-from">
+              <input 
+                type="text" 
+                value={locationText} 
+                onChange={e => setLocationText(e.target.value)} 
+                placeholder="From: Your City, Country"
+                className="location-input"
+              />
+            </div>
+          </div>
+
+          {/* Letter Greeting */}
+          <div className="letter-greeting">
+            Dear Universe,
+          </div>
+
+          {/* Prompt as Letter Opening */}
+          {prompt && (
+            <div className="letter-prompt">
+              {prompt.text}
+            </div>
+          )}
+
+          {/* Image Upload Section */}
+          <div className="letter-image-section">
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={e => setFile(e.target.files?.[0] || null)}
+              className="image-input"
+              id="image-upload"
+            />
+            <label htmlFor="image-upload" className="image-upload-label">
+              {file ? (
+                <div className="image-preview">
+                  <img src={URL.createObjectURL(file)} alt="Preview" />
+                  <span className="image-filename">{file.name}</span>
+                </div>
+              ) : (
+                <div className="image-placeholder">
+                  <div className="image-placeholder-icon">📷</div>
+                  <span>Attach a memory</span>
+                </div>
+              )}
+            </label>
+          </div>
+
+          {/* Letter Content */}
+          <div className="letter-content">
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Share your story here..."
+              className="letter-textarea"
+              rows={12}
+            />
+          </div>
+
+          {/* Letter Signature */}
+          <div className="letter-signature">
+            <div className="signature-line">
+              With reflection,
+            </div>
+            <div className="signature-space">
+              A fellow traveler
+            </div>
+          </div>
+
+          {/* Character Count */}
+          <div className="letter-meta">
+            <div className={`char-count ${text.length < MIN ? 'too-short' : text.length > MAX ? 'too-long' : 'valid'}`}>
+              {text.length} / {MAX} characters
+              {text.length < MIN && ` (${MIN - text.length} more needed)`}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <form onSubmit={handleSubmit} className="letter-form">
+            <button 
+              disabled={!valid || loading} 
+              type="submit"
+              className="send-letter-btn"
+            >
+              {loading ? 'Sending letter...' : 'Send Letter to the Universe'}
+            </button>
+          </form>
+
+          {/* Message */}
+          {message && (
+            <div className={`letter-message ${message.includes('Thank you') ? 'success' : 'error'}`}>
+              {message}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
