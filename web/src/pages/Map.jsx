@@ -172,19 +172,27 @@ function HeatmapLayer({ points }) {
       map.removeLayer(heatLayerRef.current)
     }
     
-    // Create heatmap data: [lat, lng, intensity]
-    const heatData = points.map(point => [
+    // Create heatmap data with world wrapping
+    const baseHeatData = points.map(point => [
       point.lat, 
       point.lng, 
       point.intensity || 1
     ])
     
+    // Create copies for world wrapping (longitude offsets of ±360°)
+    const heatData = []
+    for (let offset = -360; offset <= 360; offset += 360) {
+      baseHeatData.forEach(point => {
+        heatData.push([point[0], point[1] + offset, point[2]])
+      })
+    }
+    
     // Get current zoom level
     const currentZoom = map.getZoom()
     
     // Dynamic scaling based on zoom level and data volume
-    const totalPoints = heatData.length
-    const maxIntensity = Math.max(...heatData.map(point => point[2]))
+    const totalPoints = baseHeatData.length // Use base data for scaling calculations
+    const maxIntensity = Math.max(...baseHeatData.map(point => point[2]))
     
     // Zoom-responsive scaling with artifact prevention
     let zoomMultiplier = 1
@@ -242,9 +250,29 @@ function HeatmapLayer({ points }) {
   return null
 }
 
+// Generate markers with world wrapping
+function generateWrappedMarkers(items) {
+  const wrappedMarkers = []
+  
+  // Create markers for original world and ±360° longitude offsets
+  for (let offset = -360; offset <= 360; offset += 360) {
+    items.forEach(item => {
+      wrappedMarkers.push({
+        ...item,
+        id: `${item.id}_${offset}`, // Unique ID for each wrapped instance
+        lng: item.lng + offset,
+        originalId: item.id // Keep reference to original
+      })
+    })
+  }
+  
+  return wrappedMarkers
+}
+
 export default function MapPage() {
   const [items, setItems] = useState([])
   const [processedPoints, setProcessedPoints] = useState([])
+  const [wrappedMarkers, setWrappedMarkers] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, cities: 0 })
 
@@ -270,9 +298,11 @@ export default function MapPage() {
       if (!ignore) {
         const items = error ? [] : (data || [])
         const processed = processLocations(items)
+        const wrapped = generateWrappedMarkers(items)
         
         setItems(items)
         setProcessedPoints(processed)
+        setWrappedMarkers(wrapped)
         setStats({
           total: items.length,
           cities: new Set(processed.map(p => `${Math.round(p.lat * 10)},${Math.round(p.lng * 10)}`)).size
@@ -367,7 +397,7 @@ export default function MapPage() {
       >
         <DynamicTileLayer />
         <HeatmapLayer points={processedPoints} />
-        {items.map(item => (
+        {wrappedMarkers.map(item => (
           <Marker key={item.id} position={[item.lat, item.lng]}>
             <Popup maxWidth={300} className="story-popup">
               <div className="popup-content">
