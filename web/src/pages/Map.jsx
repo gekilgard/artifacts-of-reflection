@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet'
 import { Link } from 'react-router-dom'
 import L from 'leaflet'
@@ -95,41 +95,21 @@ function processLocations(items) {
   return processed
 }
 
-// World wrapping controller for infinite seamless scrolling
-function WorldWrapController() {
+// Infinite scroll controller that dynamically generates content
+function InfiniteScrollController() {
   const map = useMap()
   
   useEffect(() => {
-    // Set world bounds to prevent infinite zoom out
-    const worldBounds = [
-      [-90, -180], // Southwest corner
-      [90, 180]    // Northeast corner
-    ]
-    
-    // Restrict zoom and set world bounds
-    map.setMaxBounds(worldBounds)
-    map.setMinZoom(1) // Prevent zooming out too far
+    // Remove world bounds to allow infinite scrolling
+    map.setMaxBounds(null)
+    map.setMinZoom(1)
     map.setMaxZoom(18)
     
-    // Handle world wrapping when panning reaches edges
-    const handleMoveEnd = () => {
-      const center = map.getCenter()
-      let { lat, lng } = center
-      
-      // Wrap longitude when crossing edges (like Snake game)
-      if (lng > 180) {
-        lng = lng - 360
-        map.setView([lat, lng], map.getZoom(), { animate: false })
-      } else if (lng < -180) {
-        lng = lng + 360
-        map.setView([lat, lng], map.getZoom(), { animate: false })
-      }
-    }
-    
-    map.on('moveend', handleMoveEnd)
+    // Enable infinite scrolling by allowing longitude beyond ±180
+    map.options.crs.infinite = true
     
     return () => {
-      map.off('moveend', handleMoveEnd)
+      // Cleanup if needed
     }
   }, [map])
   
@@ -213,30 +193,38 @@ function HeatmapLayer({ points }) {
       map.removeLayer(heatLayerRef.current)
     }
     
-    // Create heatmap data with optimized world wrapping
+    // Get current map bounds to determine what copies to generate
+    const bounds = map.getBounds()
+    const westLng = bounds.getWest()
+    const eastLng = bounds.getEast()
+    
+    // Create base heatmap data
     const baseHeatData = points.map(point => [
       point.lat, 
       point.lng, 
       point.intensity || 1
     ])
     
-    // Create strategic copies for seamless wrapping (only what's needed)
-    const heatData = [...baseHeatData]
+    // Generate infinite copies based on current view
+    const heatData = []
     
-    // Add edge copies for seamless wrapping at boundaries
-    baseHeatData.forEach(point => {
-      const [lat, lng, intensity] = point
-      
-      // Add copies near the edges for seamless wrapping
-      if (lng > 90) {
-        // Points near eastern edge also appear on western edge
-        heatData.push([lat, lng - 360, intensity])
-      }
-      if (lng < -90) {
-        // Points near western edge also appear on eastern edge
-        heatData.push([lat, lng + 360, intensity])
-      }
-    })
+    // Calculate how many world copies we need to cover the current view
+    const worldWidth = 360
+    const minCopy = Math.floor(westLng / worldWidth)
+    const maxCopy = Math.ceil(eastLng / worldWidth)
+    
+    // Generate copies for each world instance in view
+    for (let worldCopy = minCopy; worldCopy <= maxCopy; worldCopy++) {
+      baseHeatData.forEach(point => {
+        const [lat, lng, intensity] = point
+        const offsetLng = lng + (worldCopy * worldWidth)
+        
+        // Only add points that are potentially visible in current bounds
+        if (offsetLng >= westLng - 180 && offsetLng <= eastLng + 180) {
+          heatData.push([lat, offsetLng, intensity])
+        }
+      })
+    }
     
     // Get current zoom level
     const currentZoom = map.getZoom()
@@ -318,11 +306,13 @@ function HeatmapLayer({ points }) {
   useEffect(() => {
     updateHeatmap()
     
-    // Update heatmap when zoom changes
+    // Update heatmap when zoom or view changes
     map.on('zoomend', updateHeatmap)
+    map.on('moveend', updateHeatmap)
     
     return () => {
       map.off('zoomend', updateHeatmap)
+      map.off('moveend', updateHeatmap)
       if (heatLayerRef.current) {
         map.removeLayer(heatLayerRef.current)
       }
@@ -332,40 +322,96 @@ function HeatmapLayer({ points }) {
   return null
 }
 
-// Generate optimized markers for seamless world wrapping
-function generateWrappedMarkers(items) {
-  const wrappedMarkers = [...items] // Start with original items
+// Dynamic marker component that generates markers based on current view
+function DynamicMarkers({ items }) {
+  const map = useMap()
+  const [visibleMarkers, setVisibleMarkers] = useState([])
   
-  // Add strategic edge copies for seamless wrapping
-  items.forEach(item => {
-    // Add copies near edges for seamless Snake-game-like wrapping
-    if (item.lng > 90) {
-      // Items near eastern edge also appear on western edge
-      wrappedMarkers.push({
-        ...item,
-        id: `${item.id}_west`,
-        lng: item.lng - 360,
-        originalId: item.id
+  const updateVisibleMarkers = useCallback(() => {
+    if (!items.length) return
+    
+    // Get current map bounds
+    const bounds = map.getBounds()
+    const westLng = bounds.getWest()
+    const eastLng = bounds.getEast()
+    
+    const markers = []
+    const worldWidth = 360
+    
+    // Calculate how many world copies we need
+    const minCopy = Math.floor(westLng / worldWidth)
+    const maxCopy = Math.ceil(eastLng / worldWidth)
+    
+    // Generate markers for each world copy in view
+    for (let worldCopy = minCopy; worldCopy <= maxCopy; worldCopy++) {
+      items.forEach(item => {
+        const offsetLng = item.lng + (worldCopy * worldWidth)
+        
+        // Only add markers that are potentially visible
+        if (offsetLng >= westLng - 180 && offsetLng <= eastLng + 180) {
+          markers.push({
+            ...item,
+            id: `${item.id}_${worldCopy}`,
+            lng: offsetLng,
+            originalId: item.id
+          })
+        }
       })
     }
-    if (item.lng < -90) {
-      // Items near western edge also appear on eastern edge
-      wrappedMarkers.push({
-        ...item,
-        id: `${item.id}_east`,
-        lng: item.lng + 360,
-        originalId: item.id
-      })
-    }
-  })
+    
+    setVisibleMarkers(markers)
+  }, [items, map])
   
-  return wrappedMarkers
+  useEffect(() => {
+    updateVisibleMarkers()
+    
+    // Update markers when view changes
+    map.on('moveend', updateVisibleMarkers)
+    map.on('zoomend', updateVisibleMarkers)
+    
+    return () => {
+      map.off('moveend', updateVisibleMarkers)
+      map.off('zoomend', updateVisibleMarkers)
+    }
+  }, [updateVisibleMarkers, map])
+  
+  return (
+    <>
+      {visibleMarkers.map(item => (
+        <Marker key={item.id} position={[item.lat, item.lng]}>
+          <Popup maxWidth={300} className="story-popup">
+            <div className="popup-content">
+              {item.image_url && (
+                <img 
+                  src={item.image_url} 
+                  alt="" 
+                  className="popup-image"
+                />
+              )}
+              <div className="popup-question">{item.question_text}</div>
+              <div className="popup-story">{item.story_text}</div>
+              <div className="popup-meta">
+                {item.location_text && (
+                  <div className="popup-location">
+                    <span>📍</span>
+                    <span>{item.location_text}</span>
+                  </div>
+                )}
+                <div className="popup-date">
+                  {new Date(item.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  )
 }
 
 export default function MapPage() {
   const [items, setItems] = useState([])
   const [processedPoints, setProcessedPoints] = useState([])
-  const [wrappedMarkers, setWrappedMarkers] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, cities: 0 })
 
@@ -391,11 +437,9 @@ export default function MapPage() {
       if (!ignore) {
         const items = error ? [] : (data || [])
         const processed = processLocations(items)
-        const wrapped = generateWrappedMarkers(items)
         
         setItems(items)
         setProcessedPoints(processed)
-        setWrappedMarkers(wrapped)
         setStats({
           total: items.length,
           cities: new Set(processed.map(p => `${Math.round(p.lat * 10)},${Math.round(p.lng * 10)}`)).size
@@ -489,37 +533,10 @@ export default function MapPage() {
         keyboard={false}
         worldCopyJump={false} // Disable Leaflet's default world jumping
       >
-        <WorldWrapController />
+        <InfiniteScrollController />
         <DynamicTileLayer />
         <HeatmapLayer points={processedPoints} />
-        {wrappedMarkers.map(item => (
-          <Marker key={item.id} position={[item.lat, item.lng]}>
-            <Popup maxWidth={300} className="story-popup">
-              <div className="popup-content">
-                {item.image_url && (
-                  <img 
-                    src={item.image_url} 
-                    alt="" 
-                    className="popup-image"
-                  />
-                )}
-                <div className="popup-question">{item.question_text}</div>
-                <div className="popup-story">{item.story_text}</div>
-                <div className="popup-meta">
-                  {item.location_text && (
-                    <div className="popup-location">
-                      <span>📍</span>
-                      <span>{item.location_text}</span>
-                    </div>
-                  )}
-                  <div className="popup-date">
-                    {new Date(item.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <DynamicMarkers items={items} />
       </MapContainer>
         
       <div className="map-overlay-info">
