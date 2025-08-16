@@ -1,34 +1,50 @@
 /* Map Page Styles */
 .map-page {
-  padding: var(--space-lg);
-  min-height: 100vh;
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   background: var(--color-background);
 }
 
-.map-header {
+/* Overlay Header */
+.map-overlay-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
   gap: var(--space-lg);
+  z-index: 1000;
+  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, transparent 100%);
+  backdrop-filter: blur(8px);
 }
 
-.map-title {
+.map-overlay-content {
+  flex: 1;
+}
+
+.map-overlay-title {
   font-size: var(--font-size-3xl);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0 0 var(--space-xs) 0;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.map-subtitle {
+.map-overlay-subtitle {
   font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
   margin: 0;
   font-weight: 400;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.map-stats {
+.map-overlay-stats {
   display: flex;
   gap: var(--space-lg);
 }
@@ -36,6 +52,10 @@
 .stat-item {
   text-align: center;
   min-width: 80px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--space-sm);
+  border-radius: var(--border-radius-md);
+  backdrop-filter: blur(8px);
 }
 
 .stat-number {
@@ -44,6 +64,7 @@
   color: var(--color-accent);
   line-height: 1;
   margin-bottom: var(--space-xs);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .stat-label {
@@ -52,83 +73,39 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-/* Map Container */
-.map-container {
-  position: relative;
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-xl);
-  background: var(--color-surface);
-}
-
-.story-map {
-  height: 70vh;
-  width: 100%;
+/* Fullscreen Map */
+.story-map-fullscreen {
+  height: 100vh !important;
+  width: 100vw !important;
   z-index: 1;
 }
 
-/* Map Legend */
-.map-legend {
+/* Overlay Info */
+.map-overlay-info {
   position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  background: var(--color-surface);
-  padding: var(--space-md);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-lg);
+  bottom: var(--space-lg);
+  right: var(--space-lg);
   z-index: 1000;
-  min-width: 160px;
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.95);
 }
 
-[data-theme="dark"] .map-legend {
-  background: rgba(24, 24, 27, 0.95);
-}
-
-.legend-title {
+.info-note {
+  background: rgba(255, 255, 255, 0.9);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius-md);
   font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-sm);
-  text-align: center;
-}
-
-.legend-gradient {
-  margin-bottom: var(--space-sm);
-}
-
-.legend-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-xs);
-}
-
-.legend-bar {
-  height: 8px;
-  border-radius: 4px;
-  background: linear-gradient(
-    to right,
-    #3b82f6,
-    #06b6d4,
-    #10b981,
-    #f59e0b,
-    #ef4444,
-    #dc2626
-  );
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.legend-note {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  text-align: center;
   font-style: italic;
-  line-height: 1.4;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Dark mode support for info note */
+[data-theme="dark"] .info-note {
+  background: rgba(24, 24, 27, 0.9);
+  color: var(--color-text-secondary);
 }
 
 /* Loading States */
@@ -137,8 +114,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  height: 100vh;
+  width: 100vw;
   gap: var(--space-lg);
+  background: var(--color-background);
 }
 
 .map-loading-text {
@@ -149,40 +128,33 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .map-page {
+  .map-overlay-header {
+    flex-direction: column;
+    gap: var(--space-md);
     padding: var(--space-md);
   }
   
-  .map-header {
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-  
-  .map-stats {
+  .map-overlay-stats {
     align-self: stretch;
     justify-content: space-around;
   }
   
-  .map-title {
+  .map-overlay-title {
     font-size: var(--font-size-2xl);
   }
   
-  .map-subtitle {
+  .map-overlay-subtitle {
     font-size: var(--font-size-md);
   }
   
-  .story-map {
-    height: 50vh;
+  .map-overlay-info {
+    bottom: var(--space-md);
+    right: var(--space-md);
+    left: var(--space-md);
   }
   
-  .map-legend {
-    position: static;
-    margin-top: var(--space-md);
-    width: 100%;
-  }
-  
-  .map-container {
-    border-radius: var(--border-radius-md);
+  .info-note {
+    text-align: center;
   }
 }
 
@@ -191,35 +163,26 @@
     font-size: var(--font-size-xl);
   }
   
-  .story-map {
-    height: 40vh;
+  .map-overlay-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .map-overlay-stats {
+    gap: var(--space-md);
+  }
+  
+  .stat-item {
+    min-width: 60px;
+    padding: var(--space-xs);
   }
 }
 
 /* Custom Leaflet Overrides */
 .leaflet-container {
-  background: var(--color-background-secondary);
+  background: transparent;
 }
 
-.leaflet-tile {
-  filter: var(--theme, none);
-}
-
-[data-theme="dark"] .leaflet-tile {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
-}
-
+/* Hide attribution since we disabled it */
 .leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.8) !important;
-  font-size: 10px !important;
-  padding: 2px 5px !important;
-}
-
-[data-theme="dark"] .leaflet-control-attribution {
-  background: rgba(0, 0, 0, 0.8) !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-.leaflet-control-attribution a {
-  color: var(--color-text-secondary) !important;
+  display: none !important;
 }

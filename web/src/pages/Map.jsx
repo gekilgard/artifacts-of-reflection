@@ -84,6 +84,70 @@ function processLocations(items) {
   return processed
 }
 
+// Dynamic tile layer that responds to theme changes
+function DynamicTileLayer() {
+  const map = useMap()
+  const tileLayerRef = useRef(null)
+  
+  useEffect(() => {
+    // Remove existing tile layer
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current)
+    }
+    
+    // Determine theme
+    const isDark = document.documentElement.dataset.theme === 'dark' || 
+                   (!document.documentElement.dataset.theme && 
+                    window.matchMedia('(prefers-color-scheme: dark)').matches)
+    
+    // Add new tile layer based on theme
+    tileLayerRef.current = L.tileLayer(
+      `https://{s}.basemaps.cartocdn.com/${isDark ? 'dark_nolabels' : 'light_nolabels'}/{z}/{x}/{y}{r}.png`,
+      {
+        attribution: '&copy; Carto',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }
+    ).addTo(map)
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(() => {
+      const newIsDark = document.documentElement.dataset.theme === 'dark' || 
+                        (!document.documentElement.dataset.theme && 
+                         window.matchMedia('(prefers-color-scheme: dark)').matches)
+      
+      if (newIsDark !== isDark) {
+        // Theme changed, update tile layer
+        if (tileLayerRef.current) {
+          map.removeLayer(tileLayerRef.current)
+        }
+        tileLayerRef.current = L.tileLayer(
+          `https://{s}.basemaps.cartocdn.com/${newIsDark ? 'dark_nolabels' : 'light_nolabels'}/{z}/{x}/{y}{r}.png`,
+          {
+            attribution: '&copy; Carto',
+            subdomains: 'abcd',
+            maxZoom: 19
+          }
+        ).addTo(map)
+      }
+    })
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    })
+    
+    return () => {
+      observer.disconnect()
+      if (tileLayerRef.current) {
+        map.removeLayer(tileLayerRef.current)
+      }
+    }
+  }, [map])
+  
+  return null
+}
+
 // Heatmap component
 function HeatmapLayer({ points }) {
   const map = useMap()
@@ -104,10 +168,20 @@ function HeatmapLayer({ points }) {
       point.intensity || 1
     ])
     
+    // Dynamic scaling based on data volume
+    const totalPoints = heatData.length
+    const maxIntensity = Math.max(...heatData.map(point => point[2]))
+    
+    // Adjust settings for low data volumes
+    const dynamicRadius = totalPoints < 50 ? 40 : totalPoints < 200 ? 30 : 25
+    const dynamicBlur = totalPoints < 50 ? 25 : totalPoints < 200 ? 20 : 15
+    const dynamicMax = Math.max(maxIntensity * 0.8, 1) // Normalize max to make small datasets more visible
+    
     // Create and add heat layer
     heatLayerRef.current = L.heatLayer(heatData, {
-      radius: 25,
-      blur: 15,
+      radius: dynamicRadius,
+      blur: dynamicBlur,
+      max: dynamicMax, // Dynamic scaling instead of fixed scale
       maxZoom: 17,
       gradient: {
         0.0: '#3b82f6',    // Blue
@@ -187,14 +261,14 @@ export default function MapPage() {
 
   return (
     <div className="map-page">
-      <div className="map-header">
-        <div>
-          <h1 className="map-title">Story Heatmap</h1>
-          <p className="map-subtitle">
+      <div className="map-overlay-header">
+        <div className="map-overlay-content">
+          <h1 className="map-overlay-title">Story Heatmap</h1>
+          <p className="map-overlay-subtitle">
             {stats.total} {stats.total === 1 ? 'story' : 'stories'} from around the world
           </p>
         </div>
-        <div className="map-stats">
+        <div className="map-overlay-stats">
           <div className="stat-item">
             <div className="stat-number">{stats.total}</div>
             <div className="stat-label">Stories</div>
@@ -206,33 +280,20 @@ export default function MapPage() {
         </div>
       </div>
 
-      <div className="map-container">
-        <MapContainer 
-          center={center} 
-          zoom={zoom} 
-          className="story-map"
-          zoomControl={false}
-          attributionControl={false}
-        >
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <HeatmapLayer points={processedPoints} />
-        </MapContainer>
+      <MapContainer 
+        center={center} 
+        zoom={zoom} 
+        className="story-map-fullscreen"
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <DynamicTileLayer />
+        <HeatmapLayer points={processedPoints} />
+      </MapContainer>
         
-        <div className="map-legend">
-          <div className="legend-title">Heat Intensity</div>
-          <div className="legend-gradient">
-            <div className="legend-labels">
-              <span>Low</span>
-              <span>High</span>
-            </div>
-            <div className="legend-bar"></div>
-          </div>
-          <div className="legend-note">
-            Locations are approximate for privacy
-          </div>
+      <div className="map-overlay-info">
+        <div className="info-note">
+          Locations are approximate for privacy
         </div>
       </div>
     </div>
