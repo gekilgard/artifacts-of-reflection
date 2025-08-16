@@ -1,10 +1,21 @@
 /* Map Page Styles */
 .map-page {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   background: var(--color-background);
+  z-index: 0;
+}
+
+/* Prevent all page scrolling */
+body.map-active {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* Overlay Header */
@@ -185,4 +196,93 @@
 /* Hide attribution since we disabled it */
 .leaflet-control-attribution {
   display: none !important;
+}
+
+/* Story Popup Styles */
+.story-popup .leaflet-popup-content-wrapper {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+  padding: 0;
+  overflow: hidden;
+}
+
+.story-popup .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.story-popup .leaflet-popup-tip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-right: none;
+}
+
+.popup-content {
+  padding: var(--space-md);
+  max-width: 280px;
+}
+
+.popup-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.popup-question {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+  line-height: 1.4;
+}
+
+.popup-story {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.popup-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.popup-location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.popup-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+/* Custom popup close button */
+.story-popup .leaflet-popup-close-button {
+  color: var(--color-text-secondary);
+  font-size: 20px;
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.story-popup .leaflet-popup-close-button:hover {
+  color: var(--color-text-primary);
 }

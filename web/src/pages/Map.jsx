@@ -1,10 +1,18 @@
 import { useEffect, useState, useRef } from 'react'
-import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.heat'
 import { supabase } from '../lib/supabaseClient.js'
 import './Map.css'
+
+// Fix default icon paths for Leaflet when bundled
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+})
 
 // Location fuzzing utility functions
 const CITY_RADIUS_KM = 25 // Consider posts within 25km as same city
@@ -148,12 +156,12 @@ function DynamicTileLayer() {
   return null
 }
 
-// Heatmap component
+// Zoom-responsive heatmap component
 function HeatmapLayer({ points }) {
   const map = useMap()
   const heatLayerRef = useRef(null)
   
-  useEffect(() => {
+  const updateHeatmap = () => {
     if (!points.length) return
     
     // Remove existing heat layer
@@ -168,21 +176,32 @@ function HeatmapLayer({ points }) {
       point.intensity || 1
     ])
     
-    // Dynamic scaling based on data volume
+    // Get current zoom level
+    const currentZoom = map.getZoom()
+    
+    // Dynamic scaling based on zoom level and data volume
     const totalPoints = heatData.length
     const maxIntensity = Math.max(...heatData.map(point => point[2]))
     
-    // Adjust settings for low data volumes
-    const dynamicRadius = totalPoints < 50 ? 40 : totalPoints < 200 ? 30 : 25
-    const dynamicBlur = totalPoints < 50 ? 25 : totalPoints < 200 ? 20 : 15
+    // Zoom-responsive scaling
+    let zoomMultiplier = 1
+    if (currentZoom <= 3) zoomMultiplier = 3 // Continental view
+    else if (currentZoom <= 6) zoomMultiplier = 2 // Country view  
+    else if (currentZoom <= 10) zoomMultiplier = 1.5 // Regional view
+    else zoomMultiplier = 1 // City view
+    
+    // Adjust settings for low data volumes and zoom level
+    const baseRadius = totalPoints < 50 ? 40 : totalPoints < 200 ? 30 : 25
+    const dynamicRadius = Math.round(baseRadius * zoomMultiplier)
+    const dynamicBlur = Math.round((totalPoints < 50 ? 25 : totalPoints < 200 ? 20 : 15) * zoomMultiplier)
     const dynamicMax = Math.max(maxIntensity * 0.8, 1) // Normalize max to make small datasets more visible
     
     // Create and add heat layer
     heatLayerRef.current = L.heatLayer(heatData, {
       radius: dynamicRadius,
       blur: dynamicBlur,
-      max: dynamicMax, // Dynamic scaling instead of fixed scale
-      maxZoom: 17,
+      max: dynamicMax,
+      minOpacity: 0.4, // Ensure visibility at all zoom levels
       gradient: {
         0.0: '#3b82f6',    // Blue
         0.2: '#06b6d4',    // Cyan  
@@ -192,8 +211,16 @@ function HeatmapLayer({ points }) {
         1.0: '#dc2626'     // Dark red
       }
     }).addTo(map)
+  }
+  
+  useEffect(() => {
+    updateHeatmap()
+    
+    // Update heatmap when zoom changes
+    map.on('zoomend', updateHeatmap)
     
     return () => {
+      map.off('zoomend', updateHeatmap)
       if (heatLayerRef.current) {
         map.removeLayer(heatLayerRef.current)
       }
@@ -248,6 +275,14 @@ export default function MapPage() {
   const center = [20, 0] // world view
   const zoom = 2
 
+  // Prevent page scrolling when map is active
+  useEffect(() => {
+    document.body.classList.add('map-active')
+    return () => {
+      document.body.classList.remove('map-active')
+    }
+  }, [])
+
   if (loading) {
     return (
       <div className="map-page">
@@ -286,9 +321,43 @@ export default function MapPage() {
         className="story-map-fullscreen"
         zoomControl={false}
         attributionControl={false}
+        scrollWheelZoom={true}
+        dragging={true}
+        touchZoom={true}
+        doubleClickZoom={true}
+        boxZoom={false}
+        keyboard={false}
       >
         <DynamicTileLayer />
         <HeatmapLayer points={processedPoints} />
+        {items.map(item => (
+          <Marker key={item.id} position={[item.lat, item.lng]}>
+            <Popup maxWidth={300} className="story-popup">
+              <div className="popup-content">
+                {item.image_url && (
+                  <img 
+                    src={item.image_url} 
+                    alt="" 
+                    className="popup-image"
+                  />
+                )}
+                <div className="popup-question">{item.question_text}</div>
+                <div className="popup-story">{item.story_text}</div>
+                <div className="popup-meta">
+                  {item.location_text && (
+                    <div className="popup-location">
+                      <span>📍</span>
+                      <span>{item.location_text}</span>
+                    </div>
+                  )}
+                  <div className="popup-date">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
         
       <div className="map-overlay-info">
