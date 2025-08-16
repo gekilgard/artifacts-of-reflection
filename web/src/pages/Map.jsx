@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet'
+import { Link } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.heat'
 import { supabase } from '../lib/supabaseClient.js'
+import { useTheme } from '../components/ThemeProvider.jsx'
+import ThemeToggle from '../components/ThemeToggle.jsx'
 import './Map.css'
 
 // Fix default icon paths for Leaflet when bundled
@@ -183,12 +186,20 @@ function HeatmapLayer({ points }) {
     const totalPoints = heatData.length
     const maxIntensity = Math.max(...heatData.map(point => point[2]))
     
-    // Zoom-responsive scaling
+    // Zoom-responsive scaling with artifact prevention
     let zoomMultiplier = 1
-    if (currentZoom <= 3) zoomMultiplier = 3 // Continental view
-    else if (currentZoom <= 6) zoomMultiplier = 2 // Country view  
-    else if (currentZoom <= 10) zoomMultiplier = 1.5 // Regional view
-    else zoomMultiplier = 1 // City view
+    if (currentZoom <= 2) {
+      // Very low zoom - prevent artifacts by limiting heatmap intensity
+      zoomMultiplier = 2
+    } else if (currentZoom <= 4) {
+      zoomMultiplier = 2.5 // Continental view
+    } else if (currentZoom <= 6) {
+      zoomMultiplier = 2 // Country view  
+    } else if (currentZoom <= 10) {
+      zoomMultiplier = 1.5 // Regional view
+    } else {
+      zoomMultiplier = 1 // City view
+    }
     
     // Adjust settings for low data volumes and zoom level
     const baseRadius = totalPoints < 50 ? 40 : totalPoints < 200 ? 30 : 25
@@ -196,12 +207,13 @@ function HeatmapLayer({ points }) {
     const dynamicBlur = Math.round((totalPoints < 50 ? 25 : totalPoints < 200 ? 20 : 15) * zoomMultiplier)
     const dynamicMax = Math.max(maxIntensity * 0.8, 1) // Normalize max to make small datasets more visible
     
-    // Create and add heat layer
+    // Create and add heat layer with better settings to prevent artifacts
     heatLayerRef.current = L.heatLayer(heatData, {
       radius: dynamicRadius,
       blur: dynamicBlur,
       max: dynamicMax,
-      minOpacity: 0.4, // Ensure visibility at all zoom levels
+      minOpacity: currentZoom <= 3 ? 0.6 : 0.4, // Higher opacity at low zoom
+      maxZoom: 18, // Prevent artifacts at very low zoom
       gradient: {
         0.0: '#3b82f6',    // Blue
         0.2: '#06b6d4',    // Cyan  
@@ -296,6 +308,31 @@ export default function MapPage() {
 
   return (
     <div className="map-page">
+      {/* Persistent Navigation */}
+      <nav className="map-nav">
+        <div className="map-nav-content">
+          <Link to="/" className="map-nav-brand">
+            <div className="brand-icon">
+              <div className="brand-circle">
+                <div className="brand-inner"></div>
+              </div>
+            </div>
+            <span className="brand-text">Artifacts of Reflection</span>
+          </Link>
+          
+          <div className="map-nav-links">
+            <Link to="/" className="map-nav-link">Home</Link>
+            <Link to="/wall" className="map-nav-link">Wall</Link>
+            <Link to="/map" className="map-nav-link active">Map</Link>
+            <Link to="/submit" className="map-nav-link">Submit</Link>
+          </div>
+          
+          <div className="map-nav-actions">
+            <ThemeToggle />
+          </div>
+        </div>
+      </nav>
+
       <div className="map-overlay-header">
         <div className="map-overlay-content">
           <h1 className="map-overlay-title">Story Heatmap</h1>
