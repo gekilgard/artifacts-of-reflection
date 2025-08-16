@@ -1,48 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import './Wall.css'
 
 function DetailModal({ item, onClose }) {
   if (!item) return null
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: 20
-      }}
-      onClick={onClose}
-    >
-      <div 
-        style={{
-          backgroundColor: 'white',
-          borderRadius: 12,
-          padding: 24,
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          color: 'black'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose}
-          style={{
-            float: 'right',
-            background: 'none',
-            border: 'none',
-            fontSize: 24,
-            cursor: 'pointer'
-          }}
-        >
+    <div className="detail-modal" onClick={onClose}>
+      <div className="detail-modal-content" onClick={e => e.stopPropagation()}>
+        <button className="detail-modal-close" onClick={onClose}>
           ×
         </button>
         
@@ -50,32 +16,28 @@ function DetailModal({ item, onClose }) {
           <img 
             src={item.image_url} 
             alt="" 
-            style={{ 
-              maxWidth: '100%',
-              maxHeight: '60vh',
-              objectFit: 'contain',
-              display: 'block',
-              margin: '0 auto 16px'
-            }} 
+            className="detail-modal-image"
           />
         )}
         
-        <div style={{ fontWeight: 'bold', marginBottom: 8, fontSize: 16 }}>
+        <div className="detail-modal-question">
           {item.question_text}
         </div>
         
-        <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5, marginBottom: 8 }}>
+        <div className="detail-modal-story">
           {item.story_text}
         </div>
         
-        {item.location_text && (
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
-            📍 {item.location_text}
+        <div className="detail-modal-meta">
+          {item.location_text && (
+            <div className="detail-modal-location">
+              <span>📍</span>
+              <span>{item.location_text}</span>
+            </div>
+          )}
+          <div className="detail-modal-date">
+            {new Date(item.created_at).toLocaleString()}
           </div>
-        )}
-        
-        <div style={{ fontSize: 12, color: '#666' }}>
-          {new Date(item.created_at).toLocaleString()}
         </div>
       </div>
     </div>
@@ -86,66 +48,178 @@ export default function Wall() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [newItemIds, setNewItemIds] = useState(new Set())
 
-  useEffect(() => {
-    let ignore = false
-    async function load() {
-      setLoading(true)
-      if (!supabase) {
-        setItems([])
-        setLoading(false)
-        return
-      }
+  const loadSubmissions = useCallback(async (showRefreshIndicator = false) => {
+    if (showRefreshIndicator) setIsRefreshing(true)
+    
+    if (!supabase) {
+      setItems([])
+      setLoading(false)
+      setIsRefreshing(false)
+      return
+    }
+
+    try {
       const { data, error } = await supabase
         .from('submissions')
         .select('id, image_url, question_text, story_text, location_text, created_at')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
-      if (!ignore) {
-        if (error) setItems([])
-        else setItems(data || [])
-        setLoading(false)
+      
+      if (error) {
+        console.error('Error loading submissions:', error)
+        setItems([])
+      } else {
+        const newData = data || []
+        
+        // If we have existing items, check for new ones
+        if (items.length > 0 && newData.length > 0) {
+          const existingIds = new Set(items.map(item => item.id))
+          const newIds = new Set()
+          
+          newData.forEach(item => {
+            if (!existingIds.has(item.id)) {
+              newIds.add(item.id)
+            }
+          })
+          
+          if (newIds.size > 0) {
+            setNewItemIds(newIds)
+            // Clear new item indicators after animation
+            setTimeout(() => setNewItemIds(new Set()), 2000)
+          }
+        }
+        
+        setItems(newData)
       }
+    } catch (err) {
+      console.error('Error loading submissions:', err)
+      setItems([])
+    } finally {
+      setLoading(false)
+      setIsRefreshing(false)
     }
-    load()
-    return () => { ignore = true }
+  }, [items])
+
+  // Initial load
+  useEffect(() => {
+    loadSubmissions()
   }, [])
 
+  // Set up periodic refresh
+  useEffect(() => {
+    if (!supabase) return
 
+    const refreshInterval = setInterval(() => {
+      loadSubmissions(true)
+    }, 15000) // Refresh every 15 seconds
 
-  if (loading) return <p>Loading…</p>
+    return () => clearInterval(refreshInterval)
+  }, [loadSubmissions])
+
+  // Set up real-time subscription for instant updates
+  useEffect(() => {
+    if (!supabase) return
+
+    const channel = supabase
+      .channel('submissions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'submissions',
+          filter: 'status=eq.approved'
+        },
+        (payload) => {
+          console.log('Real-time update:', payload)
+          // Reload data when changes occur
+          loadSubmissions(true)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadSubmissions])
+
+  if (loading) {
+    return (
+      <div className="wall-page">
+        <div className="wall-loading">
+          <div className="loading-spinner"></div>
+          <div className="wall-loading-text">Loading stories...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="wall-page">
+        <div className="wall-empty">
+          <h2 className="wall-empty-title">No stories yet</h2>
+          <p className="wall-empty-text">
+            Be the first to share your story! Stories appear here once they're approved.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div>
-      <h2>Wall</h2>
-      <div style={{
-        display: 'grid',
-        gap: 12,
-        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))'
-      }}>
-        {items.map(it => (
+    <div className="wall-page">
+      <div className="wall-header">
+        <div>
+          <h1 className="wall-title">Stories</h1>
+          <p className="wall-subtitle">
+            {items.length} {items.length === 1 ? 'story' : 'stories'} shared
+          </p>
+        </div>
+        <div className="refresh-indicator">
+          <div className={`refresh-dot ${isRefreshing ? 'loading' : ''}`}></div>
+          <span>Live updates</span>
+        </div>
+      </div>
+
+      <div className="wall-grid">
+        {items.map((item, index) => (
           <article 
-            key={it.id} 
+            key={item.id}
+            className={`wall-item ${newItemIds.has(item.id) ? 'new-item' : ''}`}
             style={{ 
-              border: '1px solid #ddd', 
-              borderRadius: 8, 
-              padding: 8,
-              cursor: 'pointer'
+              animationDelay: `${Math.min(index * 50, 500)}ms` 
             }}
-            onClick={() => setSelectedItem(it)}
+            onClick={() => setSelectedItem(item)}
           >
-            {it.image_url && <img src={it.image_url} alt="" style={{ width: '100%' }} />}
-            <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
-              {new Date(it.created_at).toLocaleString()}
-            </div>
-            {it.location_text && (
-              <div style={{ fontSize: 11, color: '#777' }}>
-                📍 {it.location_text}
-              </div>
+            {item.image_url && (
+              <img 
+                src={item.image_url} 
+                alt="" 
+                className="wall-item-image"
+              />
             )}
+            <div className="wall-item-content">
+              <p className="wall-item-text">{item.story_text}</p>
+              <div className="wall-item-meta">
+                {item.location_text && (
+                  <div className="wall-item-location">
+                    <span>📍</span>
+                    <span>{item.location_text}</span>
+                  </div>
+                )}
+                <div className="wall-item-date">
+                  {new Date(item.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
           </article>
         ))}
       </div>
+
       <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
     </div>
   )
