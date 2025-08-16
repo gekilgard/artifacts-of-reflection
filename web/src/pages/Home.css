@@ -1,0 +1,216 @@
+/* Home Page Styles */
+.home-page {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.hero-section {
+  margin-bottom: var(--space-3xl);
+  padding: var(--space-3xl) 0;
+}
+
+.hero-content {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: var(--font-size-4xl);
+  font-weight: 300;
+  line-height: 1.1;
+  margin: 0 0 var(--space-xl) 0;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.title-primary {
+  color: var(--color-text-primary);
+  font-weight: 400;
+  display: block;
+}
+
+.title-secondary {
+  color: var(--color-text-secondary);
+  font-weight: 300;
+  display: block;
+  margin-top: var(--space-xs);
+}
+
+.hero-description {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 var(--space-2xl) 0;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xl);
+  margin-top: var(--space-2xl);
+  padding: var(--space-xl) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.stat-number {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  letter-spacing: -0.005em;
+}
+
+.section-header {
+  margin-bottom: var(--space-3xl);
+}
+
+.section-title {
+  font-size: var(--font-size-xl);
+  font-weight: 400;
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.prompts-grid {
+  display: grid;
+  gap: 1px;
+  margin-bottom: var(--space-3xl);
+  border: 1px solid var(--color-border);
+}
+
+.prompt-card {
+  background: var(--color-surface);
+  padding: var(--space-2xl);
+  cursor: pointer;
+  transition: background-color 200ms ease-out;
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr 120px;
+  align-items: center;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prompt-card:last-child {
+  border-bottom: none;
+}
+
+.prompt-card:hover {
+  background: var(--color-background-secondary);
+}
+
+.prompt-card.selected {
+  background: var(--color-background-secondary);
+}
+
+.prompt-number {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.prompt-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-text {
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.prompt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.prompt-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  transition: color 200ms ease-out;
+  letter-spacing: -0.005em;
+}
+
+.prompt-action-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.refresh-prompts {
+  display: flex;
+  justify-content: center;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: none;
+  border: 1px solid var(--color-border);
+  padding: var(--space-md) var(--space-lg);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 200ms ease-out;
+  letter-spacing: -0.005em;
+}
+
+.refresh-btn:hover {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .hero-stats {
+    gap: var(--space-lg);
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .prompt-card {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+    text-align: left;
+  }
+
+  .prompt-actions {
+    justify-content: flex-start;
+  }
+}
