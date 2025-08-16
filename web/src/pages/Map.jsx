@@ -191,37 +191,68 @@ function HeatmapLayer({ points }) {
     const currentZoom = map.getZoom()
     
     // Dynamic scaling based on zoom level and data volume
-    const totalPoints = baseHeatData.length // Use base data for scaling calculations
+    const totalPoints = baseHeatData.length
     const maxIntensity = Math.max(...baseHeatData.map(point => point[2]))
     
-    // Zoom-responsive scaling with artifact prevention
-    let zoomMultiplier = 1
-    if (currentZoom <= 2) {
-      // Very low zoom - prevent artifacts by limiting heatmap intensity
-      zoomMultiplier = 2
-    } else if (currentZoom <= 4) {
-      zoomMultiplier = 2.5 // Continental view
-    } else if (currentZoom <= 6) {
-      zoomMultiplier = 2 // Country view  
-    } else if (currentZoom <= 10) {
-      zoomMultiplier = 1.5 // Regional view
+    // Completely rewritten zoom-responsive scaling to prevent square artifacts
+    let radius, blur, minOpacity
+    
+    if (currentZoom <= 1) {
+      // Global view - very conservative to prevent artifacts
+      radius = 15
+      blur = 25
+      minOpacity = 0.3
+    } else if (currentZoom <= 2) {
+      // Continental view - smooth scaling
+      radius = 20
+      blur = 20
+      minOpacity = 0.4
+    } else if (currentZoom <= 3) {
+      // Large continental view
+      radius = 25
+      blur = 18
+      minOpacity = 0.5
+    } else if (currentZoom <= 5) {
+      // Country view
+      radius = 30
+      blur = 15
+      minOpacity = 0.4
+    } else if (currentZoom <= 8) {
+      // Regional view
+      radius = 35
+      blur = 12
+      minOpacity = 0.3
+    } else if (currentZoom <= 12) {
+      // City view
+      radius = 40
+      blur = 10
+      minOpacity = 0.2
     } else {
-      zoomMultiplier = 1 // City view
+      // Close-up view
+      radius = 45
+      blur = 8
+      minOpacity = 0.1
     }
     
-    // Adjust settings for low data volumes and zoom level
-    const baseRadius = totalPoints < 50 ? 40 : totalPoints < 200 ? 30 : 25
-    const dynamicRadius = Math.round(baseRadius * zoomMultiplier)
-    const dynamicBlur = Math.round((totalPoints < 50 ? 25 : totalPoints < 200 ? 20 : 15) * zoomMultiplier)
-    const dynamicMax = Math.max(maxIntensity * 0.8, 1) // Normalize max to make small datasets more visible
+    // Adjust for data volume without artifacts
+    if (totalPoints < 20) {
+      radius += 10
+      blur += 5
+    } else if (totalPoints < 50) {
+      radius += 5
+      blur += 2
+    }
     
-    // Create and add heat layer with better settings to prevent artifacts
+    // Calculate max intensity to prevent oversaturation
+    const dynamicMax = Math.max(maxIntensity, 1)
+    
+    // Create heat layer with anti-artifact settings
     heatLayerRef.current = L.heatLayer(heatData, {
-      radius: dynamicRadius,
-      blur: dynamicBlur,
+      radius: radius,
+      blur: blur,
       max: dynamicMax,
-      minOpacity: currentZoom <= 3 ? 0.6 : 0.4, // Higher opacity at low zoom
-      maxZoom: 18, // Prevent artifacts at very low zoom
+      minOpacity: minOpacity,
+      maxZoom: 18,
       gradient: {
         0.0: '#3b82f6',    // Blue
         0.2: '#06b6d4',    // Cyan  
