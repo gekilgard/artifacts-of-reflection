@@ -48,10 +48,9 @@ function fuzzLocation(lat, lng, radiusKm = FUZZ_RADIUS_KM) {
   return { lat: newLat, lng: newLng }
 }
 
-// Group posts by city and apply fuzzing
+// Group posts by city and apply fuzzing with global relative intensity
 function processLocations(items) {
   const groups = []
-  const processed = []
   
   items.forEach(item => {
     // Find existing group within city radius
@@ -70,23 +69,33 @@ function processLocations(items) {
     }
   })
   
-  // Apply fuzzing to groups with multiple items
+  // Find the maximum group size for relative intensity scaling
+  const maxGroupSize = Math.max(...groups.map(group => group.items.length))
+  
+  const processed = []
+  
+  // Apply fuzzing and relative intensity to groups
   groups.forEach(group => {
-    if (group.items.length === 1) {
+    const groupSize = group.items.length
+    // Calculate relative intensity: group size / max group size
+    // This ensures the largest group gets intensity 1.0, smaller groups get proportionally less
+    const relativeIntensity = groupSize / maxGroupSize
+    
+    if (groupSize === 1) {
       // Single item, no fuzzing needed
       processed.push({
         ...group.items[0],
-        intensity: 1
+        intensity: relativeIntensity
       })
     } else {
-      // Multiple items, apply fuzzing and increase intensity
+      // Multiple items, apply fuzzing with relative intensity
       group.items.forEach(item => {
         const fuzzed = fuzzLocation(group.centerLat, group.centerLng)
         processed.push({
           ...item,
           lat: fuzzed.lat,
           lng: fuzzed.lng,
-          intensity: Math.min(group.items.length * 0.5, 3) // Scale intensity by group size
+          intensity: relativeIntensity
         })
       })
     }
@@ -282,8 +291,8 @@ function HeatmapLayer({ points }) {
       blur += 2
     }
     
-    // Calculate max intensity to prevent oversaturation
-    const dynamicMax = Math.max(maxIntensity, 1)
+    // Use relative intensity directly - max should be 1.0 since we normalized
+    const dynamicMax = 1.0
     
     // Create heat layer with anti-artifact settings
     heatLayerRef.current = L.heatLayer(heatData, {
