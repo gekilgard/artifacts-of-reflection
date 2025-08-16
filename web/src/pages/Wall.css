@@ -86,6 +86,11 @@
   border: 1px solid var(--color-accent);
 }
 
+.wall-item.removing-item {
+  animation: itemFadeOut 600ms ease-out forwards;
+  pointer-events: none;
+}
+
 .wall-item-image {
   width: 100%;
   aspect-ratio: 4/3;
@@ -292,6 +297,29 @@
     box-shadow: var(--shadow-md);
     border: 1px solid transparent;
     background: var(--color-surface);
+  }
+}
+
+@keyframes itemFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 500px;
+    margin-bottom: 2px;
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-10px) scale(0.98);
+    max-height: 500px;
+    margin-bottom: 2px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    max-height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 

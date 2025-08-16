@@ -51,6 +51,7 @@ export default function Wall() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [newItemIds, setNewItemIds] = useState(new Set())
   const [newItemCount, setNewItemCount] = useState(0)
+  const [removingItemIds, setRemovingItemIds] = useState(new Set())
 
   const loadSubmissions = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setIsRefreshing(true)
@@ -75,17 +76,28 @@ export default function Wall() {
       } else {
         const newData = data || []
         
-        // If we have existing items, check for new ones
-        if (items.length > 0 && newData.length > 0) {
+        // If we have existing items, check for new ones and removed ones
+        if (items.length > 0) {
           const existingIds = new Set(items.map(item => item.id))
+          const newDataIds = new Set(newData.map(item => item.id))
           const newIds = new Set()
+          const removedIds = new Set()
           
+          // Check for new items
           newData.forEach(item => {
             if (!existingIds.has(item.id)) {
               newIds.add(item.id)
             }
           })
           
+          // Check for removed items
+          items.forEach(item => {
+            if (!newDataIds.has(item.id)) {
+              removedIds.add(item.id)
+            }
+          })
+          
+          // Handle new items
           if (newIds.size > 0) {
             setNewItemIds(newIds)
             setNewItemCount(newIds.size)
@@ -95,6 +107,18 @@ export default function Wall() {
               setNewItemIds(new Set())
               setNewItemCount(0)
             }, 3000)
+          }
+          
+          // Handle removed items
+          if (removedIds.size > 0) {
+            setRemovingItemIds(removedIds)
+            
+            // Wait for fade-out animation to complete before removing from state
+            setTimeout(() => {
+              setItems(newData)
+              setRemovingItemIds(new Set())
+            }, 600) // Match the fade-out animation duration
+            return // Don't update items immediately if we're animating removals
           }
         }
         
@@ -200,7 +224,7 @@ export default function Wall() {
         {items.map((item, index) => (
           <article 
             key={item.id}
-            className={`wall-item ${newItemIds.has(item.id) ? 'new-item' : ''}`}
+            className={`wall-item ${newItemIds.has(item.id) ? 'new-item' : ''} ${removingItemIds.has(item.id) ? 'removing-item' : ''}`}
             style={{ 
               animationDelay: `${Math.min(index * 50, 500)}ms` 
             }}
