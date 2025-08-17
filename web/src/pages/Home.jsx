@@ -385,28 +385,25 @@ export default function Home() {
         className="background-canvas"
       />
 
-      {/* Scroll Progress Bar */}
+      {/* Vertical Micro Scroll Progress Bar */}
       <div className="scroll-progress-container" onClick={() => setIsChaptersOpen(true)}>
-        <div className="scroll-progress-bar">
+        <div className="scroll-progress-track">
           <div 
             className="scroll-progress-fill" 
-            style={{ width: `${scrollProgress * 100}%` }}
+            style={{ height: `${scrollProgress * 100}%` }}
           />
         </div>
-        <div className={`scroll-sections ${isChaptersOpen ? 'open' : ''}`}>
+        <div className="scroll-progress-indicators">
           {sections.map((section) => (
-            <button
+            <div
               key={section.id}
-              className={`section-marker ${activeSection === section.id ? 'active' : ''}`}
+              className={`progress-dot ${activeSection === section.id ? 'active' : ''}`}
+              style={{ top: `${section.offset * 100}%` }}
               onClick={(e) => {
                 e.stopPropagation()
                 jumpToSection(section.id)
               }}
-              style={{ left: `${section.offset * 100}%` }}
-            >
-              <span className="section-number">{section.id + 1}</span>
-              <span className="section-title">{section.title}</span>
-            </button>
+            />
           ))}
         </div>
       </div>
