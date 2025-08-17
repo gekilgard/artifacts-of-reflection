@@ -15,6 +15,7 @@ export default function Home() {
   const [selectedArtifact, setSelectedArtifact] = useState(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isChaptersOpen, setIsChaptersOpen] = useState(false)
   
   const containerRef = useRef(null)
   const heroRef = useRef(null)
@@ -78,9 +79,9 @@ export default function Home() {
 
   // Section definitions for progress bar
   const sections = [
-    { id: 0, title: "Introduction", offset: 0 },
-    { id: 1, title: "The Practice", offset: 0.3 },
-    { id: 2, title: "Your Story", offset: 0.7 }
+    { id: 0, title: "When I Was Too Busy", offset: 0 },
+    { id: 1, title: "Objects as Bridges", offset: 0.3 },
+    { id: 2, title: "Now It's Your Turn", offset: 0.7 }
   ]
 
   // Initialize Lenis smooth scrolling
@@ -385,19 +386,22 @@ export default function Home() {
       />
 
       {/* Scroll Progress Bar */}
-      <div className="scroll-progress-container">
+      <div className="scroll-progress-container" onClick={() => setIsChaptersOpen(true)}>
         <div className="scroll-progress-bar">
           <div 
             className="scroll-progress-fill" 
             style={{ width: `${scrollProgress * 100}%` }}
           />
         </div>
-        <div className="scroll-sections">
+        <div className={`scroll-sections ${isChaptersOpen ? 'open' : ''}`}>
           {sections.map((section) => (
             <button
               key={section.id}
               className={`section-marker ${activeSection === section.id ? 'active' : ''}`}
-              onClick={() => jumpToSection(section.id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                jumpToSection(section.id)
+              }}
               style={{ left: `${section.offset * 100}%` }}
             >
               <span className="section-number">{section.id + 1}</span>
@@ -406,6 +410,38 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* Chapters Modal - Getty Style */}
+      {isChaptersOpen && (
+        <div className="chapters-modal" onClick={() => setIsChaptersOpen(false)}>
+          <div className="chapters-content" onClick={e => e.stopPropagation()}>
+            <div className="chapters-header">
+              <h2 className="chapters-title">Chapters</h2>
+              <button 
+                className="chapters-close"
+                onClick={() => setIsChaptersOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="chapters-list">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  className={`chapter-item ${activeSection === section.id ? 'active' : ''}`}
+                  onClick={() => {
+                    jumpToSection(section.id)
+                    setIsChaptersOpen(false)
+                  }}
+                >
+                  <div className="chapter-number">{section.id + 1}</div>
+                  <h3 className="chapter-title">{section.title}</h3>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Getty-Style Hamburger Menu */}
       <div className="hamburger-menu-container">
@@ -560,8 +596,8 @@ export default function Home() {
               Whether done in person or across distance, with family or friends, 
               it's a ritual for preserving connection.
             </p>
-          </div>
-          
+      </div>
+
           <div className="invitation-questions">
             <p className="invitation-question">
               <strong>What random, silly, mundane object reminds you of someone you love?</strong>
@@ -571,9 +607,9 @@ export default function Home() {
             </p>
             <p className="invitation-question">
               <strong>When was the last time you told them?</strong>
-            </p>
-          </div>
-          
+          </p>
+        </div>
+
           <div className="invitation-actions">
             <Link to="/submit" className="btn-primary-large">
               Share Your Object's Story
@@ -610,7 +646,7 @@ export default function Home() {
                 src={selectedArtifact.image} 
                 alt={selectedArtifact.title}
               />
-            </div>
+              </div>
             <div className="modal-info">
               <h3 className="modal-title">{selectedArtifact.title}</h3>
               <p className="modal-year">{selectedArtifact.year}</p>
@@ -622,7 +658,7 @@ export default function Home() {
                 Artifacts of Reflection, Personal Collection
               </div>
             </div>
-          </div>
+        </div>
         </div>
       )}
     </div>

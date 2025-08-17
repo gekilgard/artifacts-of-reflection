@@ -34,6 +34,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .scroll-progress-container:hover {
@@ -233,6 +234,14 @@
   height: 40px;
   display: flex;
   align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.scroll-sections.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .section-marker {
@@ -282,6 +291,132 @@
 .section-title {
   font-size: var(--font-size-sm);
   font-weight: 400;
+}
+
+/* Chapters Modal - Getty Style */
+.chapters-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40px) saturate(180%);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: chaptersModalFadeIn 0.3s ease;
+}
+
+@keyframes chaptersModalFadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(40px) saturate(180%); }
+}
+
+.chapters-content {
+  max-width: 600px;
+  width: 100%;
+  padding: var(--space-2xl);
+  position: relative;
+}
+
+.chapters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3xl);
+}
+
+.chapters-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 300;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.chapters-close {
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.chapters-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-primary);
+}
+
+.chapters-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.chapter-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: none;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.chapter-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.chapter-item.active {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.chapter-item.active::after {
+  content: '';
+  position: absolute;
+  right: var(--space-lg);
+  width: 100%;
+  max-width: 200px;
+  height: 2px;
+  background: var(--color-accent);
+}
+
+.chapter-number {
+  width: 40px;
+  height: 40px;
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chapter-item.active .chapter-number {
+  background: var(--color-accent);
+  color: var(--color-background);
+}
+
+.chapter-title {
+  font-size: var(--font-size-lg);
+  font-weight: 300;
+  color: var(--color-text-primary);
+  margin: 0;
 }
 
 /* Hero Section - Getty Layout */
@@ -816,6 +951,29 @@
   .hamburger-menu-container {
     top: var(--space-md);
     right: var(--space-md);
+  }
+  
+  /* Mobile chapters modal adjustments */
+  .chapters-content {
+    margin: var(--space-md);
+  }
+  
+  .chapters-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .chapter-item {
+    padding: var(--space-md);
+  }
+  
+  .chapter-number {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-sm);
+  }
+  
+  .chapter-title {
+    font-size: var(--font-size-base);
   }
 }
 
