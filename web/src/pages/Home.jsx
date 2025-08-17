@@ -294,21 +294,39 @@ export default function Home() {
     return () => ctx.revert()
   }, [activeSection])
 
-  // Advanced mouse tracking for parallax
+  // Dramatic mouse tracking for parallax - artifacts drawn towards mouse
   useEffect(() => {
     const handleMouseMove = (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2
-      const y = (e.clientY / window.innerHeight - 0.5) * 2
-      setMousePosition({ x, y })
+      const mouseX = e.clientX
+      const mouseY = e.clientY
+      const centerX = window.innerWidth / 2
+      const centerY = window.innerHeight / 2
+      
+      setMousePosition({ x: mouseX, y: mouseY })
 
-      // Apply subtle parallax to artifacts
+      // Dramatic parallax - artifacts are drawn towards mouse
       artifactRefs.current.forEach((ref, index) => {
         if (ref) {
-          const speed = (index + 1) * 0.5
+          const rect = ref.getBoundingClientRect()
+          const artifactCenterX = rect.left + rect.width / 2
+          const artifactCenterY = rect.top + rect.height / 2
+          
+          // Calculate attraction force towards mouse
+          const deltaX = mouseX - artifactCenterX
+          const deltaY = mouseY - artifactCenterY
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+          
+          // Stronger attraction when mouse is closer
+          const maxDistance = 400
+          const attraction = Math.max(0, (maxDistance - distance) / maxDistance)
+          const pullStrength = attraction * 60 * (index + 1) * 0.3
+          
           gsap.to(ref, {
-            x: x * speed * 10,
-            y: y * speed * 10,
-            duration: 0.5,
+            x: deltaX * attraction * 0.3,
+            y: deltaY * attraction * 0.3,
+            scale: 1 + attraction * 0.15,
+            rotation: deltaX * attraction * 0.1,
+            duration: 0.8,
             ease: "power2.out"
           })
         }
@@ -441,14 +459,20 @@ export default function Home() {
       {/* Hero Section with Positioned Artifacts */}
       <section className="hero-section" data-section="0" ref={heroRef}>
         <div className="hero-background">
-          <p className="subtitle">Millions of Memories, Spanning Generations</p>
+          <p className="subtitle">A Personal Journey, Spanning Generations</p>
           <h1 className="main-title">
-            Here's how Artifacts of Reflection is transforming research on
+            When I was too busy to reach out,
             <br />
-            <em>the social life of objects.</em>
+            <em>objects became my way back to connection.</em>
           </h1>
+          <div className="hero-narrative">
+            <p>
+              During my internship out of state, guilt consumed me. I was too busy to call, 
+              too distracted to visit, too caught up in my own world to reach out to the people who matter most.
+            </p>
+          </div>
           <div className="scroll-prompt">
-            <span>↓ Scroll down</span>
+            <span>↓ Scroll to discover</span>
           </div>
         </div>
 
@@ -473,32 +497,48 @@ export default function Home() {
         ))}
       </section>
 
-      {/* The Practice Section */}
+      {/* The Discovery Section */}
       <section className="practice-section" data-section="1">
         <div className="section-content">
-          <h2 className="section-title">The Practice of Remembering</h2>
+          <h2 className="section-title">Objects as Bridges</h2>
           <div className="practice-grid">
             <div className="practice-text">
               <p>
-                This project began as a personal ritual during my capstone research. 
-                I realized that objects hold more than memory—they hold presence itself.
+                That's when I started noticing the objects around me—my grandmother's wooden spoon, 
+                faded photographs, sketches left behind. Random, silly, mundane things that somehow 
+                carried the weight of entire relationships.
               </p>
               <p>
-                Through careful attention to family artifacts, I discovered a framework 
-                for remembering better—for being present with the people and moments they represent.
+                <strong>What if objects could be our way back to each other?</strong>
               </p>
               <p>
-                Each object became a conversation partner. I learned to listen to their 
-                stories of touch, time, and connection.
+                I began interviewing my loved ones—family, chosen family, people I'd grown close to 
+                or distant from. We'd reflect on our relationship, handle personal objects together, 
+                sometimes sketch or prototype.
+              </p>
+              <p>
+                From each conversation, I create two identical objects: one for them, one for me. 
+                Twin artifacts of remembrance. Something we see every day that whispers, 
+                <em>"Hey, I'm thinking about them. I should reach out."</em>
               </p>
             </div>
             <div className="practice-visual">
               <img 
                 src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop"
-                alt="Hands holding memories"
+                alt="Hands creating together"
                 className="practice-image"
               />
             </div>
+          </div>
+          
+          <div className="research-context">
+            <h3>Contributing to Design Research</h3>
+            <p>
+              This work contributes to ethnographic and object-oriented ontology research, 
+              exploring how we derive meaning from everyday objects. It's about understanding 
+              the social life of things—how hand-me-downs, family heirlooms, and even silly 
+              things left behind by loved ones become vessels for presence and connection.
+            </p>
           </div>
         </div>
       </section>
@@ -506,24 +546,51 @@ export default function Home() {
       {/* Your Story Section */}
       <section className="invitation-section" data-section="2">
         <div className="section-content">
-          <h2 className="section-title">Your Artifact Journey Begins Here</h2>
+          <h2 className="section-title">Now It's Your Turn</h2>
           <p className="invitation-description">
-            Every object has a story. Every story creates connection. Share yours with the growing 
-            constellation of memory artifacts from around the world.
+            You don't need to be a designer or artist. You don't need to fix relationships or 
+            create beautiful objects. This is about something quieter—a pause, a moment of 
+            co-presence, a way to remember better.
           </p>
-          <p className="invitation-question">
-            <strong>What object connects you to someone you care about?</strong>
-          </p>
+          
+          <div className="invitation-framework">
+            <h3>A Practice Anyone Can Use</h3>
+            <p>
+              This isn't just my story—it's a framework you can take into your own life. 
+              Whether done in person or across distance, with family or friends, 
+              it's a ritual for preserving connection.
+            </p>
+          </div>
+          
+          <div className="invitation-questions">
+            <p className="invitation-question">
+              <strong>What random, silly, mundane object reminds you of someone you love?</strong>
+            </p>
+            <p className="invitation-question">
+              <strong>What story does it tell about your relationship?</strong>
+            </p>
+            <p className="invitation-question">
+              <strong>When was the last time you told them?</strong>
+            </p>
+          </div>
+          
           <div className="invitation-actions">
             <Link to="/submit" className="btn-primary-large">
-              Share Your Artifact Story
+              Share Your Object's Story
             </Link>
             <Link to="/wall" className="btn-secondary">
-              Explore Stories
+              Read Others' Stories
             </Link>
             <Link to="/map" className="btn-secondary">
-              View Global Map
+              Explore the Map
             </Link>
+          </div>
+          
+          <div className="invitation-framework-note">
+            <p>
+              <em>Want to try the full practice? The framework toolkit will be available soon—
+              prompts for memory, guidance for conversations, and ways to create your own artifacts of connection.</em>
+            </p>
           </div>
         </div>
       </section>
