@@ -3,97 +3,156 @@ import { Link } from 'react-router-dom'
 import './Home.css'
 
 export default function Home() {
-  const [prompts, setPrompts] = useState([])
-  const [selectedPrompt, setSelectedPrompt] = useState(null)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [isScrolling, setIsScrolling] = useState(false)
+
+  // Capstone artifact journey - Grant's origin story
+  const artifactJourney = [
+    {
+      year: "2024",
+      title: "The Beginning",
+      description: "I began collecting objects from my family—a worn wooden spoon, faded photographs, letters never sent.",
+      image: "https://images.unsplash.com/photo-1566479179817-0d6ed1be1ba5?w=400&h=300&fit=crop&crop=center",
+      story: "This project started as a personal ritual. During my capstone research, I realized that objects hold more than memory—they hold presence itself."
+    },
+    {
+      year: "2024",
+      title: "The Ritual",
+      description: "Each object became a conversation partner. I learned to listen to their stories of touch, time, and connection.",
+      image: "https://images.unsplash.com/photo-1544037151-6e4ed999de21?w=400&h=300&fit=crop&crop=center",
+      story: "Through careful attention to these objects, I discovered a framework for remembering better—for being present with the people and moments they represent."
+    },
+    {
+      year: "2025",
+      title: "The Invitation",
+      description: "Now this practice becomes yours. What object connects you to someone you care about?",
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&crop=center",
+      story: "Artifacts of Reflection is both a research tool and an invitation—to slow down, to notice, to remember that objects can teach us how to be present with each other."
+    }
+  ]
 
   useEffect(() => {
-    fetch('/prompt.json').then(r => r.json()).then(setPrompts).catch(() => setPrompts([]))
-  }, [])
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const windowHeight = window.innerHeight
+      const newStep = Math.min(Math.floor(scrollY / (windowHeight * 0.8)), artifactJourney.length - 1)
+      
+      if (newStep !== currentStep) {
+        setCurrentStep(newStep)
+        setIsScrolling(true)
+        setTimeout(() => setIsScrolling(false), 300)
+      }
+    }
 
-  const randomThree = prompts
-    .slice()
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [currentStep])
 
   return (
     <div className="home-page">
-      <div className="hero-section">
+      {/* Hero Landing - Getty Style */}
+      <div className="hero-landing">
         <div className="hero-content">
           <h1 className="hero-title">
             <span className="title-primary">Artifacts</span>
             <span className="title-secondary">of Reflection</span>
           </h1>
-          <p className="hero-description">
-            Widespread, worldwide ethnographic research exploring the meaning of objects and their cultural significance across diverse communities.
+          <p className="hero-subtitle">
+            A practice of remembering better
           </p>
-          <div className="hero-stats">
-            <div className="stat-item">
-              <span className="stat-number">{prompts.length}</span>
-              <span className="stat-label">Prompts</span>
+          <p className="hero-description">
+            This project began as a personal ritual—making objects to remember, making ritual to reconnect. 
+            Each artifact holds a story of time, care, and presence.
+          </p>
+          <div className="hero-cta">
+            <p className="hero-invitation">
+              <strong>Explore these stories, then add your own memory artifact.</strong>
+            </p>
+            <p className="hero-question">
+              What object connects you to someone you care about?
+            </p>
+            <div className="hero-buttons">
+              <Link to="/wall" className="btn-primary">
+                Explore Stories
+              </Link>
+              <Link to="/submit" className="btn-secondary">
+                Start Your Story
+              </Link>
             </div>
+          </div>
+        </div>
+        <div className="scroll-indicator">
+          <span>Scroll to explore Grant's artifact journey</span>
+          <div className="scroll-arrow">↓</div>
+        </div>
+      </div>
+
+      {/* Interactive Artifact Journey - Inspired by Getty's timeline */}
+      <div className="artifact-journey">
+        <div className="journey-container">
+          <div className="journey-timeline">
+            {artifactJourney.map((step, index) => (
+              <div 
+                key={index}
+                className={`journey-step ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'passed' : ''}`}
+              >
+                <div className="step-marker">
+                  <div className="step-year">{step.year}</div>
+                </div>
+                <div className="step-content">
+                  <div className="step-image-container">
+                    <img 
+                      src={step.image} 
+                      alt={step.title}
+                      className="step-image"
+                    />
+                  </div>
+                  <div className="step-text">
+                    <h2 className="step-title">{step.title}</h2>
+                    <p className="step-description">{step.description}</p>
+                    <div className={`step-story ${index === currentStep ? 'visible' : ''}`}>
+                      <p>{step.story}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action Section */}
+      <div className="final-invitation">
+        <div className="invitation-content">
+          <h2 className="invitation-title">Your Artifact Journey Begins Here</h2>
+          <p className="invitation-text">
+            Every object has a story. Every story creates connection. Share yours with the growing 
+            constellation of memory artifacts from around the world.
+          </p>
+          <div className="invitation-buttons">
+            <Link to="/submit" className="btn-primary-large">
+              Share Your Artifact Story
+            </Link>
+            <Link to="/map" className="btn-secondary">
+              View Global Map
+            </Link>
+          </div>
+          <div className="invitation-stats">
             <div className="stat-item">
               <span className="stat-number">∞</span>
-              <span className="stat-label">Stories</span>
+              <span className="stat-label">Stories Waiting</span>
             </div>
             <div className="stat-item">
               <span className="stat-number">Global</span>
               <span className="stat-label">Community</span>
             </div>
+            <div className="stat-item">
+              <span className="stat-number">One</span>
+              <span className="stat-label">Shared Practice</span>
+            </div>
           </div>
         </div>
       </div>
-
-      <div className="prompts-section">
-        <div className="section-header">
-          <h2 className="section-title">Begin Your Reflection</h2>
-          <p className="section-subtitle">
-            Choose a prompt that resonates with you and share your story
-          </p>
-        </div>
-
-        <div className="prompts-grid">
-          {randomThree.map((prompt, index) => (
-            <div 
-              key={prompt.id} 
-              className={`prompt-card ${selectedPrompt === prompt.id ? 'selected' : ''}`}
-              onClick={() => setSelectedPrompt(selectedPrompt === prompt.id ? null : prompt.id)}
-            >
-              <div className="prompt-number">
-                {String(index + 1).padStart(2, '0')}
-              </div>
-              <div className="prompt-content">
-                <p className="prompt-text">{prompt.text}</p>
-              </div>
-              <div className="prompt-actions">
-                <Link 
-                  to={`/submit?promptId=${encodeURIComponent(prompt.id)}`}
-                  className="prompt-action-btn"
-                >
-                  <span>Begin</span>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M3 3L9 6L3 9" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="refresh-prompts">
-          <button 
-            className="refresh-btn"
-            onClick={() => window.location.reload()}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 1V5H5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13 7C13 10.3137 10.3137 13 7 13C4.64706 13 2.65294 11.5529 1.5 9.5M1 7C1 3.68629 3.68629 1 7 1C9.35294 1 11.3471 2.44706 12.5 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Refresh
-          </button>
-        </div>
-      </div>
-
-
     </div>
   )
 }
