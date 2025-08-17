@@ -14,6 +14,7 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState(0)
   const [selectedArtifact, setSelectedArtifact] = useState(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   const containerRef = useRef(null)
   const heroRef = useRef(null)
@@ -386,6 +387,55 @@ export default function Home() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Getty-Style Hamburger Menu */}
+      <div className="hamburger-menu-container">
+        <button 
+          className={`hamburger-button ${isMenuOpen ? 'open' : ''}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        
+        {isMenuOpen && (
+          <div className="hamburger-menu-overlay" onClick={() => setIsMenuOpen(false)}>
+            <div className="hamburger-menu-content" onClick={e => e.stopPropagation()}>
+              <div className="menu-header">
+                <h3>Artifacts of Reflection</h3>
+                <button 
+                  className="menu-close"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <nav className="menu-navigation">
+                <Link to="/" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                  <span className="menu-number">01</span>
+                  <span className="menu-title">Home</span>
+                </Link>
+                <Link to="/wall" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                  <span className="menu-number">02</span>
+                  <span className="menu-title">Stories</span>
+                </Link>
+                <Link to="/map" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                  <span className="menu-number">03</span>
+                  <span className="menu-title">Map</span>
+                </Link>
+                <Link to="/submit" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                  <span className="menu-number">04</span>
+                  <span className="menu-title">Share Your Story</span>
+                </Link>
+              </nav>
+              <div className="menu-footer">
+                <p>A practice of remembering better</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hero Section with Positioned Artifacts */}

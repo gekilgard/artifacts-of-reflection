@@ -12,6 +12,12 @@ const Wall = lazy(() => import('./pages/Wall.jsx'))
 
 function Navigation() {
   const location = useLocation()
+  
+  // Hide navigation on home page for fullscreen experience
+  if (location.pathname === '/') {
+    return null
+  }
+  
   return (
     <nav className="main-nav new-nav">
       <Link to="/" className="nav-logo">Artifacts of Reflection</Link>
@@ -27,6 +33,17 @@ function Navigation() {
 }
 
 function AppLayout({ children }) {
+  const location = useLocation()
+  
+  // Full screen layout for home page
+  if (location.pathname === '/') {
+    return (
+      <div className="app-layout fullscreen">
+        {children}
+      </div>
+    )
+  }
+  
   return (
     <div className="app-layout">
       <div className="app-container">
@@ -35,8 +52,6 @@ function AppLayout({ children }) {
           {children}
         </main>
       </div>
-      
-
     </div>
   )
 }
