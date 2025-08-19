@@ -20,10 +20,7 @@
   left: 0;
 }
 
-/* Hide any potential scrollbars */
-html, body {
-  overflow: hidden !important;
-}
+/* Scrollbars controlled by TestHome.jsx useEffect */
 
 /* Ensure the iframe takes full viewport */
 .getty-clone-container,
