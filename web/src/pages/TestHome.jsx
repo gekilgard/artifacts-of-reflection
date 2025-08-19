@@ -1,31 +1,32 @@
 import { useEffect } from 'react'
+import './TestHome.css'
 
 export default function TestHome() {
   useEffect(() => {
-    // Redirect to the Getty clone HTML file
-    window.location.replace('/test-home.html')
+    // Set document title for the Getty clone
+    document.title = 'Tracing Art - Getty Clone Test'
+    
+    // Remove any existing body styles that might interfere
+    document.body.style.margin = '0'
+    document.body.style.padding = '0'
+    document.body.style.overflow = 'hidden'
+    
+    // Cleanup function to restore original styles
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [])
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      color: '#333',
-      background: '#fff'
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1>Loading Getty Tracing Art Clone...</h1>
-        <p>Redirecting to the full Getty experience...</p>
-        <div style={{ marginTop: '20px' }}>
-          <p>If you are not redirected automatically:</p>
-          <a href="/test-home.html" style={{ color: '#0066cc', textDecoration: 'underline' }}>
-            Click here to view the Getty Clone
-          </a>
-        </div>
-      </div>
+    <div className="getty-clone-container">
+      <iframe
+        src="/test-home.html"
+        className="getty-clone-iframe"
+        title="Getty Tracing Art Clone"
+        frameBorder="0"
+        allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
     </div>
   )
 }
