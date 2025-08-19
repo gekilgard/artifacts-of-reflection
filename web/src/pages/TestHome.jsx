@@ -6,14 +6,21 @@ export default function TestHome() {
     // Set document title for the Getty clone
     document.title = 'Tracing Art - Getty Clone Test'
     
-    // Remove any existing body styles that might interfere
+    // Store original styles to restore later
+    const originalOverflow = document.body.style.overflow
+    const originalMargin = document.body.style.margin
+    const originalPadding = document.body.style.padding
+    
+    // Apply styles only for this page
     document.body.style.margin = '0'
     document.body.style.padding = '0'
     document.body.style.overflow = 'hidden'
     
-    // Cleanup function to restore original styles
+    // Cleanup function to restore original styles when leaving this page
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = originalOverflow
+      document.body.style.margin = originalMargin
+      document.body.style.padding = originalPadding
     }
   }, [])
 
