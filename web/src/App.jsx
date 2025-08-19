@@ -58,15 +58,17 @@ function AppLayout({ children }) {
 }
 
 export default function App() {
-  const [showLoading, setShowLoading] = useState(true)
+  // Commented out pageloader for development
+  // const [showLoading, setShowLoading] = useState(true)
 
-  const handleLoadingComplete = () => {
-    setShowLoading(false)
-  }
+  // const handleLoadingComplete = () => {
+  //   setShowLoading(false)
+  // }
 
   return (
     <ThemeProvider>
-      {showLoading && <Loading onComplete={handleLoadingComplete} />}
+      {/* Pageloader disabled for development - can re-enable later */}
+      {/* {showLoading && <Loading onComplete={handleLoadingComplete} />} */}
       
       <AppLayout>
         <Suspense fallback={
