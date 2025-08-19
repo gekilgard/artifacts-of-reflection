@@ -1,0 +1,1 @@
+import{_ as n,c as o,r as t,o as c}from"./DPLBeim1.js";const r={},s={id:"main"};function a(e,d){return c(),o("main",s,[t(e.$slots,"default",{},void 0,!0)])}const f=n(r,[["render",a],["__scopeId","data-v-f06b96dc"]]);export{f as default};

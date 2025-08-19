@@ -32,6 +32,28 @@
   cursor: pointer;
 }
 
+/* Shell creates the floating rounded rectangle with frosted glass */
+.scroll-progress-shell {
+  width: 44px;
+  height: 160px;
+  padding: 12px 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-float);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s var(--motion-ease), width 0.25s var(--motion-ease);
+  transform-origin: right center;
+}
+
+.scroll-progress-container:hover .scroll-progress-shell {
+  width: 48px; /* ~10% growth */
+  transform: translateY(0) translateX(-4px);
+}
+
 /* Getty-Style Hamburger Menu */
 .hamburger-menu-container {
   position: fixed;
@@ -41,26 +63,23 @@
 }
 
 .hamburger-button {
-  width: 60px;
+  width: 44px;
   height: 40px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  border-radius: 14px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-normal);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-.hamburger-button:hover {
-  background: rgba(0, 0, 0, 0.9);
-  transform: scale(1.05);
-}
+.hamburger-button:hover { background: rgba(0, 0, 0, 0.92); transform: scale(1.05); }
 
 .hamburger-button span {
   width: 20px;
@@ -209,16 +228,15 @@
 }
 
 .scroll-progress-track {
-  width: 4px;
+  width: 3px;
   height: 200px;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 2px;
   position: relative;
   transition: all 0.3s ease;
 }
-
 .scroll-progress-container:hover .scroll-progress-track {
-  width: 6px;
+  width: 4px;
   transform: translateX(-1px);
 }
 
@@ -230,6 +248,18 @@
   position: absolute;
   top: 0;
   left: 0;
+}
+
+/* Knob that mirrors Getty's black capsule moving along the track */
+.progress-knob {
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 18px;
+  background: #0a0a0a;
+  border-radius: 6px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .scroll-progress-indicators {
@@ -316,32 +346,14 @@
 }
 
 /* Chapters Modal - Getty Style */
-.chapters-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(40px) saturate(180%);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: chaptersModalFadeIn 0.3s ease;
-}
+.chapters-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--glass-bg-strong); backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate)); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: chaptersModalFadeIn 0.35s var(--motion-ease); }
 
 @keyframes chaptersModalFadeIn {
   from { opacity: 0; backdrop-filter: blur(0px); }
   to { opacity: 1; backdrop-filter: blur(40px) saturate(180%); }
 }
 
-.chapters-content {
-  max-width: 600px;
-  width: 100%;
-  padding: var(--space-2xl);
-  position: relative;
-}
+.chapters-content { max-width: 600px; width: 100%; padding: var(--space-2xl); position: relative; border-radius: 20px; border: 1px solid var(--glass-border-strong); box-shadow: var(--shadow-float-strong); background: var(--glass-bg-strong); }
 
 .chapters-header {
   display: flex;

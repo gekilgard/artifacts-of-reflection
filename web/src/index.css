@@ -61,6 +61,18 @@
   --transition-fast: 150ms ease-out;
   --transition-normal: 250ms ease-out;
   --transition-slow: 350ms ease-out;
+  
+  /* Getty-style glass + motion tokens */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-border-strong: rgba(0, 0, 0, 0.08);
+  --glass-blur: 14px;
+  --glass-blur-strong: 28px;
+  --glass-saturate: 160%;
+  --motion-ease: cubic-bezier(.20,.80,.20,1);
+  --shadow-float: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-float-strong: 0 20px 80px rgba(0,0,0,0.15);
 }
 
 /* Dark Mode */

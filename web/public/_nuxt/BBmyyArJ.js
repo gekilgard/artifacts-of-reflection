@@ -1,0 +1,1 @@
+import{r as a}from"./vxidHdmP.js";import{l as f}from"./BdT36_8W.js";function m(o){return o*Math.PI/180}const h=(o=1,r=null)=>{let e=0,s=o,t=r||a(0,360);typeof o=="object"&&(e=o.start,s=o.end),typeof t=="object"&&(t=a(r.start,r.end)),t=m(t);const n=f(Math.sqrt(Math.random()),e,s),c=n*Math.cos(t),i=n*Math.sin(t),l=a(0,-.3);return{x:c,y:i,z:l,a:t,r:n}};export{h as r};

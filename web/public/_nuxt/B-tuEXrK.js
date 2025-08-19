@@ -1,0 +1,1 @@
+import{_ as s,v as o,o as r,c,t as n,s as i}from"./DPLBeim1.js";const l={__name:"IndexNumber",props:{index:{default:0},active:{default:!1}},setup(e,{expose:a}){const t=o(null);return a({root:t}),(d,f)=>(r(),c("div",{ref_key:"refRoot",ref:t,class:i(["indexNumber textCreditsS",{active:e.active}])},n(e.index),3))}},_=s(l,[["__scopeId","data-v-2e772e20"]]);export{_ as I};

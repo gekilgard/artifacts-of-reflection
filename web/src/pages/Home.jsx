@@ -387,11 +387,17 @@ export default function Home() {
 
       {/* Vertical Micro Scroll Progress Bar */}
       <div className="scroll-progress-container" onClick={() => setIsChaptersOpen(true)}>
-        <div className="scroll-progress-track">
-          <div 
-            className="scroll-progress-fill" 
-            style={{ height: `${scrollProgress * 100}%` }}
-          />
+        <div className="scroll-progress-shell">
+          <div className="scroll-progress-track">
+            <div 
+              className="scroll-progress-fill" 
+              style={{ height: `${scrollProgress * 100}%` }}
+            />
+            <div 
+              className="progress-knob"
+              style={{ top: `${scrollProgress * 100}%` }}
+            />
+          </div>
         </div>
         <div className="scroll-progress-indicators">
           {sections.map((section) => (
