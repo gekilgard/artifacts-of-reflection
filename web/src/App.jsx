@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/ThemeProvider'
 import ThemeToggle from './components/ThemeToggle'
 import Loading from './components/Loading'
 import Home from './pages/Home.jsx'
+import TestHome from './pages/TestHome.jsx'
 import './components/components.css'
 
 const MapPage = lazy(() => import('./pages/Map.jsx'))
@@ -14,7 +15,7 @@ function Navigation() {
   const location = useLocation()
   
   // Hide navigation on home page for fullscreen experience
-  if (location.pathname === '/') {
+  if (location.pathname === '/' || location.pathname === '/test-home') {
     return null
   }
   
@@ -36,7 +37,7 @@ function AppLayout({ children }) {
   const location = useLocation()
   
   // Full screen layout for home page
-  if (location.pathname === '/') {
+  if (location.pathname === '/' || location.pathname === '/test-home') {
     return (
       <div className="app-layout fullscreen">
         {children}
@@ -78,6 +79,7 @@ export default function App() {
         }>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/test-home" element={<TestHome />} />
             <Route path="/submit" element={<Submit />} />
             <Route path="/wall" element={<Wall />} />
             <Route path="/map" element={<MapPage />} />
