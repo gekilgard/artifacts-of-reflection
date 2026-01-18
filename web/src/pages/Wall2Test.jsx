@@ -3,27 +3,28 @@ import { supabase } from '../lib/supabaseClient.js'
 import gsap from 'gsap'
 import './Wall2Test.css'
 
-// Physics simulation for circles with mouse interaction
+// Physics simulation for circles
 class PhysicsCircle {
   constructor(id, imageUrl, data, index, total) {
     this.id = id
     this.imageUrl = imageUrl
     this.data = data
-    // Start in a ring around center
-    const angle = (index / total) * Math.PI * 2
-    const startRadius = 180 + Math.random() * 120
+    // Start in a spiral pattern to avoid initial overlap
+    const angle = (index / total) * Math.PI * 2 * 3 // 3 rotations
+    const startRadius = 60 + index * 25
     this.x = startRadius * Math.cos(angle)
     this.y = startRadius * Math.sin(angle)
     this.vx = 0
     this.vy = 0
-    this.radius = 55
   }
 }
 
-function usePhysicsSimulation(items, mousePos) {
+function usePhysicsSimulation(items) {
   const [circles, setCircles] = useState([])
+  const [settled, setSettled] = useState(false)
   const animationRef = useRef()
   const circlesRef = useRef([])
+  const frameCount = useRef(0)
 
   useEffect(() => {
     if (!items.length) return
@@ -33,56 +34,62 @@ function usePhysicsSimulation(items, mousePos) {
       circlesRef.current = items.map((item, i) => 
         new PhysicsCircle(item.id, item.image_url, item, i, items.length)
       )
+      setSettled(false)
+      frameCount.current = 0
     }
     setCircles([...circlesRef.current])
 
+    const circleRadius = 50
+    const minDist = circleRadius * 2 + 6 // No overlap, tiny gap
+
     const simulate = () => {
+      if (settled) return // Stop simulation when settled
+
       const circles = circlesRef.current
       const centerX = 0
       const centerY = 0
-      const gravity = 0.04
-      const damping = 0.92
-      const circleRadius = 50
-      const minDist = circleRadius * 2 + 8 // Diameter + small gap (no overlap)
+      const damping = 0.85
+      
+      let totalMovement = 0
 
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
         
-        // Attract to center (very gentle)
+        // Very gentle pull toward center (only if far away)
         const dx = centerX - c.x
         const dy = centerY - c.y
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1
-        c.vx += (dx / dist) * gravity
-        c.vy += (dy / dist) * gravity
-
-        // Gentle nudge from mouse cursor (much weaker - just a subtle push)
-        if (mousePos.current.x !== null) {
-          const mdx = c.x - mousePos.current.x
-          const mdy = c.y - mousePos.current.y
-          const mDist = Math.sqrt(mdx * mdx + mdy * mdy) || 1
-          if (mDist < 80) {
-            // Very gentle push, falls off quickly
-            const mouseForce = 0.8 * (1 - mDist / 80)
-            c.vx += (mdx / mDist) * mouseForce
-            c.vy += (mdy / mDist) * mouseForce
-          }
+        const distFromCenter = Math.sqrt(dx * dx + dy * dy)
+        if (distFromCenter > 50) {
+          const pullStrength = 0.02
+          c.vx += (dx / distFromCenter) * pullStrength
+          c.vy += (dy / distFromCenter) * pullStrength
         }
 
-        // Squishy collision with other circles (spring-like)
-        for (let j = 0; j < circles.length; j++) {
-          if (i === j) continue
+        // Hard collision resolution - push apart immediately
+        for (let j = i + 1; j < circles.length; j++) {
           const other = circles[j]
-          const odx = c.x - other.x
-          const ody = c.y - other.y
-          const oDist = Math.sqrt(odx * odx + ody * ody) || 1
+          const odx = other.x - c.x
+          const ody = other.y - c.y
+          const oDist = Math.sqrt(odx * odx + ody * ody)
           
-          if (oDist < minDist) {
-            // How much they're overlapping
-            const overlap = minDist - oDist
-            // Spring force - stronger when more overlap (squishy effect)
-            const springForce = overlap * 0.15
-            c.vx += (odx / oDist) * springForce
-            c.vy += (ody / oDist) * springForce
+          if (oDist < minDist && oDist > 0) {
+            // Calculate overlap
+            const overlap = (minDist - oDist) / 2
+            const nx = odx / oDist
+            const ny = ody / oDist
+            
+            // Push both circles apart (position correction)
+            c.x -= nx * overlap
+            c.y -= ny * overlap
+            other.x += nx * overlap
+            other.y += ny * overlap
+            
+            // Add small velocity for squishy bounce
+            const bounce = 0.3
+            c.vx -= nx * bounce
+            c.vy -= ny * bounce
+            other.vx += nx * bounce
+            other.vy += ny * bounce
           }
         }
 
@@ -93,10 +100,25 @@ function usePhysicsSimulation(items, mousePos) {
         // Update position
         c.x += c.vx
         c.y += c.vy
+
+        // Track total movement
+        totalMovement += Math.abs(c.vx) + Math.abs(c.vy)
+      }
+
+      frameCount.current++
+      
+      // Check if settled (very little movement for a while)
+      if (frameCount.current > 60 && totalMovement < 0.1) {
+        setSettled(true)
+        // Zero out all velocities
+        circles.forEach(c => { c.vx = 0; c.vy = 0 })
       }
 
       setCircles([...circlesRef.current])
-      animationRef.current = requestAnimationFrame(simulate)
+      
+      if (!settled) {
+        animationRef.current = requestAnimationFrame(simulate)
+      }
     }
 
     animationRef.current = requestAnimationFrame(simulate)
@@ -106,7 +128,7 @@ function usePhysicsSimulation(items, mousePos) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [items, mousePos])
+  }, [items, settled])
 
   return circles
 }
@@ -261,25 +283,8 @@ export default function Wall2Test() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [clickedPosition, setClickedPosition] = useState(null)
   const containerRef = useRef(null)
-  const mousePos = useRef({ x: null, y: null })
 
-  const circles = usePhysicsSimulation(items, mousePos)
-
-  // Track mouse position relative to center
-  const handleMouseMove = (e) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    mousePos.current = {
-      x: e.clientX - rect.left - centerX,
-      y: e.clientY - rect.top - centerY
-    }
-  }
-
-  const handleMouseLeave = () => {
-    mousePos.current = { x: null, y: null }
-  }
+  const circles = usePhysicsSimulation(items)
 
   const handleCircleClick = (circle, e) => {
     // Get click position relative to viewport center
@@ -345,12 +350,7 @@ export default function Wall2Test() {
 
   return (
     <div className="wall2-page">
-      <div 
-        className="wall2-container" 
-        ref={containerRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
+      <div className="wall2-container" ref={containerRef}>
         <div className="circles-container">
           {circles.map(circle => (
             <div
