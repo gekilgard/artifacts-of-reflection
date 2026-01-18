@@ -1,0 +1,208 @@
+/* Wall2Test - Experimental Physics-based Wall */
+
+.wall2-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+.wall2-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circles-container {
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+.physics-circle {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  transform: translate(-50px, -50px);
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 2px solid var(--color-border);
+}
+
+.physics-circle:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+
+/* Loading / Empty States */
+.wall2-loading,
+.wall2-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: var(--space-lg);
+  color: var(--color-text-secondary);
+}
+
+.wall2-empty h2 {
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.wall2-empty p {
+  margin: 0;
+}
+
+/* Expanded Card Overlay */
+.expanded-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+
+.expanded-overlay.active {
+  background: rgba(0, 0, 0, 0.85);
+  pointer-events: auto;
+}
+
+/* The card that morphs from circle to rectangle */
+.expanded-card {
+  position: relative;
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: all 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.expanded-card.collapsed {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.expanded-card.expanded {
+  width: calc(100vw - 40px);
+  max-width: 600px;
+  height: auto;
+  max-height: calc(100vh - 40px);
+  border-radius: 20px;
+  opacity: 1;
+  transform: scale(1);
+  overflow-y: auto;
+}
+
+.expanded-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.expanded-close:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.expanded-image-container {
+  width: 100%;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+}
+
+.expanded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.expanded-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.expanded-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.location-pin {
+  font-size: 16px;
+}
+
+.expanded-question {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.expanded-story {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+
+.expanded-date {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .physics-circle {
+    width: 80px;
+    height: 80px;
+    transform: translate(-40px, -40px);
+  }
+  
+  .expanded-card.expanded {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+  }
+  
+  .expanded-content {
+    padding: 20px;
+  }
+}
