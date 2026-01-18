@@ -40,77 +40,69 @@ function usePhysicsSimulation(items) {
     setCircles([...circlesRef.current])
 
     const circleRadius = 50
-    const minDist = circleRadius * 2 + 6 // No overlap, tiny gap
+    const minDist = circleRadius * 2 + 4 // Exact touch with tiny buffer
 
     const simulate = () => {
-      if (settled) return // Stop simulation when settled
+      if (settled) return
 
       const circles = circlesRef.current
       const centerX = 0
       const centerY = 0
-      const damping = 0.85
+      const damping = 0.8
       
-      let totalMovement = 0
-
+      // Apply gentle center gravity
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
-        
-        // Very gentle pull toward center (only if far away)
         const dx = centerX - c.x
         const dy = centerY - c.y
         const distFromCenter = Math.sqrt(dx * dx + dy * dy)
-        if (distFromCenter > 50) {
-          const pullStrength = 0.02
-          c.vx += (dx / distFromCenter) * pullStrength
-          c.vy += (dy / distFromCenter) * pullStrength
+        if (distFromCenter > 30) {
+          c.vx += (dx / distFromCenter) * 0.015
+          c.vy += (dy / distFromCenter) * 0.015
         }
+      }
 
-        // Hard collision resolution - push apart immediately
-        for (let j = i + 1; j < circles.length; j++) {
-          const other = circles[j]
-          const odx = other.x - c.x
-          const ody = other.y - c.y
-          const oDist = Math.sqrt(odx * odx + ody * ody)
-          
-          if (oDist < minDist && oDist > 0) {
-            // Calculate overlap
-            const overlap = (minDist - oDist) / 2
-            const nx = odx / oDist
-            const ny = ody / oDist
+      // Run collision resolution multiple times to guarantee no overlap
+      for (let iteration = 0; iteration < 8; iteration++) {
+        for (let i = 0; i < circles.length; i++) {
+          const c = circles[i]
+          for (let j = i + 1; j < circles.length; j++) {
+            const other = circles[j]
+            const odx = other.x - c.x
+            const ody = other.y - c.y
+            const oDist = Math.sqrt(odx * odx + ody * ody)
             
-            // Push both circles apart (position correction)
-            c.x -= nx * overlap
-            c.y -= ny * overlap
-            other.x += nx * overlap
-            other.y += ny * overlap
-            
-            // Add small velocity for squishy bounce
-            const bounce = 0.3
-            c.vx -= nx * bounce
-            c.vy -= ny * bounce
-            other.vx += nx * bounce
-            other.vy += ny * bounce
+            if (oDist < minDist && oDist > 0.001) {
+              // Push apart - full overlap resolution
+              const overlap = (minDist - oDist) / 2
+              const nx = odx / oDist
+              const ny = ody / oDist
+              
+              c.x -= nx * overlap * 1.01 // Slight extra push
+              c.y -= ny * overlap * 1.01
+              other.x += nx * overlap * 1.01
+              other.y += ny * overlap * 1.01
+            }
           }
         }
+      }
 
-        // Apply damping
+      // Update velocities and positions
+      let totalMovement = 0
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i]
         c.vx *= damping
         c.vy *= damping
-
-        // Update position
         c.x += c.vx
         c.y += c.vy
-
-        // Track total movement
         totalMovement += Math.abs(c.vx) + Math.abs(c.vy)
       }
 
       frameCount.current++
       
-      // Check if settled (very little movement for a while)
-      if (frameCount.current > 60 && totalMovement < 0.1) {
+      // Settle when barely moving
+      if (frameCount.current > 100 && totalMovement < 0.05) {
         setSettled(true)
-        // Zero out all velocities
         circles.forEach(c => { c.vx = 0; c.vy = 0 })
       }
 
