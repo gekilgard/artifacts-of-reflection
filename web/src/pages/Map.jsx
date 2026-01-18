@@ -115,8 +115,13 @@ function InfiniteScrollController() {
   const map = useMap()
   
   useEffect(() => {
-    // Remove world bounds to allow infinite scrolling
-    map.setMaxBounds(null)
+    // Lock vertical panning while keeping horizontal infinite scrolling
+    const latLimit = 85
+    map.setMaxBounds([
+      [-latLimit, -100000],
+      [latLimit, 100000]
+    ])
+    map.setMaxBoundsViscosity(1.0)
     map.setMinZoom(2)
     map.setMaxZoom(18)
     
