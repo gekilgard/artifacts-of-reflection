@@ -19,7 +19,7 @@ class PhysicsCircle {
   }
 }
 
-function usePhysicsSimulation(items, mousePos) {
+function usePhysicsSimulation(items, mousePos, draggedCircle) {
   const [circles, setCircles] = useState([])
   const animationRef = useRef()
   const circlesRef = useRef([])
@@ -47,6 +47,9 @@ function usePhysicsSimulation(items, mousePos) {
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
         
+        // Skip physics for dragged circle
+        if (draggedCircle?.current === c) continue
+        
         // Gravitational pull toward center
         const dx = -c.x
         const dy = -c.y
@@ -57,7 +60,8 @@ function usePhysicsSimulation(items, mousePos) {
         }
 
         // Subtle cursor repulsion (very gentle - still clickable)
-        if (mousePos.current.x !== null) {
+        // Skip if dragging
+        if (mousePos.current.x !== null && !draggedCircle?.current) {
           const mdx = c.x - mousePos.current.x
           const mdy = c.y - mousePos.current.y
           const mDist = Math.sqrt(mdx * mdx + mdy * mdy)
@@ -337,7 +341,13 @@ export default function Wall2Test() {
   const containerRef = useRef(null)
   const mousePos = useRef({ x: null, y: null })
 
-  const circles = usePhysicsSimulation(items, mousePos)
+  const draggedCircle = useRef(null)
+  const dragOffset = useRef({ x: 0, y: 0 })
+  const mouseVelocity = useRef({ x: 0, y: 0 })
+  const dragStartPos = useRef({ x: 0, y: 0 })
+  const wasDragged = useRef(false)
+
+  const circles = usePhysicsSimulation(items, mousePos, draggedCircle)
 
   // Track mouse position relative to center of container
   const handleMouseMove = (e) => {
@@ -345,14 +355,72 @@ export default function Wall2Test() {
     const rect = containerRef.current.getBoundingClientRect()
     const centerX = rect.width / 2
     const centerY = rect.height / 2
-    mousePos.current = {
-      x: e.clientX - rect.left - centerX,
-      y: e.clientY - rect.top - centerY
+    const newX = e.clientX - rect.left - centerX
+    const newY = e.clientY - rect.top - centerY
+    
+    // Track velocity for throw
+    mouseVelocity.current = {
+      x: newX - (mousePos.current.x || newX),
+      y: newY - (mousePos.current.y || newY)
+    }
+    
+    mousePos.current = { x: newX, y: newY }
+    
+    // If dragging, update circle position
+    if (draggedCircle.current) {
+      // Check if moved enough to count as drag
+      const dragDist = Math.sqrt(
+        Math.pow(e.clientX - dragStartPos.current.x, 2) + 
+        Math.pow(e.clientY - dragStartPos.current.y, 2)
+      )
+      if (dragDist > 5) {
+        wasDragged.current = true
+      }
+      
+      draggedCircle.current.x = newX + dragOffset.current.x
+      draggedCircle.current.y = newY + dragOffset.current.y
+      draggedCircle.current.vx = 0
+      draggedCircle.current.vy = 0
     }
   }
 
   const handleMouseLeave = () => {
+    // Release if dragging
+    if (draggedCircle.current) {
+      draggedCircle.current.vx = mouseVelocity.current.x * 0.5
+      draggedCircle.current.vy = mouseVelocity.current.y * 0.5
+      draggedCircle.current = null
+    }
     mousePos.current = { x: null, y: null }
+  }
+  
+  const handleCircleMouseDown = (circle, e) => {
+    e.preventDefault()
+    if (!containerRef.current) return
+    
+    const rect = containerRef.current.getBoundingClientRect()
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const mouseX = e.clientX - rect.left - centerX
+    const mouseY = e.clientY - rect.top - centerY
+    
+    // Store offset from circle center to mouse
+    dragOffset.current = {
+      x: circle.x - mouseX,
+      y: circle.y - mouseY
+    }
+    dragStartPos.current = { x: e.clientX, y: e.clientY }
+    wasDragged.current = false
+    draggedCircle.current = circle
+  }
+  
+  const handleMouseUp = () => {
+    if (draggedCircle.current) {
+      // Apply throw velocity
+      draggedCircle.current.vx = mouseVelocity.current.x * 0.5
+      draggedCircle.current.vy = mouseVelocity.current.y * 0.5
+      draggedCircle.current = null
+    }
   }
 
   const handleCircleClick = (circle, e) => {
@@ -424,6 +492,7 @@ export default function Wall2Test() {
         ref={containerRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
       >
         <div className="circles-container">
           {circles.map(circle => (
@@ -432,9 +501,17 @@ export default function Wall2Test() {
               className="physics-circle"
               style={{
                 transform: `translate(${circle.x}px, ${circle.y}px)`,
-                backgroundImage: circle.imageUrl ? `url(${circle.imageUrl})` : 'none'
+                backgroundImage: circle.imageUrl ? `url(${circle.imageUrl})` : 'none',
+                cursor: draggedCircle.current === circle ? 'grabbing' : 'grab'
               }}
-              onClick={(e) => handleCircleClick(circle, e)}
+              onMouseDown={(e) => handleCircleMouseDown(circle, e)}
+              onClick={(e) => {
+                // Only open card if it was a click, not a drag
+                if (!wasDragged.current) {
+                  handleCircleClick(circle, e)
+                }
+                wasDragged.current = false
+              }}
             />
           ))}
         </div>
