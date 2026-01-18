@@ -126,125 +126,146 @@ function usePhysicsSimulation(items) {
 
 function ExpandedCard({ item, onClose, clickedPosition }) {
   const cardRef = useRef(null)
-  const contentRef = useRef(null)
+  const imageContainerRef = useRef(null)
+  const textContentRef = useRef(null)
   const overlayRef = useRef(null)
-  const imageRef = useRef(null)
   const [isClosing, setIsClosing] = useState(false)
   
   // Fixed card dimensions
   const cardWidth = Math.min(1000, window.innerWidth - 60)
   const cardHeight = Math.min(560, window.innerHeight - 100)
+  const imageSize = cardHeight // Square image matching card height
 
   useLayoutEffect(() => {
     const card = cardRef.current
-    const content = contentRef.current
+    const imageContainer = imageContainerRef.current
+    const textContent = textContentRef.current
     const overlay = overlayRef.current
-    const image = imageRef.current
-    if (!card || !content || !overlay) return
+    if (!card || !imageContainer || !textContent || !overlay) return
 
-    gsap.killTweensOf([card, content, overlay])
+    gsap.killTweensOf([card, imageContainer, textContent, overlay])
 
-    // Stage 1: Start as small circle at click position (with image visible)
+    // Initial state: small circle at click position, image visible
+    gsap.set(overlay, { backgroundColor: 'rgba(0,0,0,0)' })
     gsap.set(card, {
       width: 100,
       height: 100,
       borderRadius: 50,
-      opacity: 1,
       x: clickedPosition?.x || 0,
       y: clickedPosition?.y || 0,
     })
-    gsap.set(content, { opacity: 0 })
-    gsap.set(overlay, { backgroundColor: 'rgba(0,0,0,0)' })
-    if (image) gsap.set(image, { opacity: 1 })
+    // Image container fills the circle initially (centered)
+    gsap.set(imageContainer, {
+      width: '100%',
+      height: '100%',
+      x: 0,
+      borderRadius: 50,
+    })
+    gsap.set(textContent, { opacity: 0, x: 30 })
 
     const tl = gsap.timeline()
     
     // Overlay fades in
     tl.to(overlay, {
       backgroundColor: 'rgba(0,0,0,0.92)',
-      duration: 0.4,
-      ease: 'power2.out'
+      duration: 0.5,
+      ease: 'power2.inOut'
     }, 0)
     
-    // Stage 1: Circle zooms in and moves to center
+    // Stage 1: Circle grows to final image size (stays circular)
     tl.to(card, {
-      width: 200,
-      height: 200,
-      borderRadius: 100,
+      width: imageSize,
+      height: imageSize,
+      borderRadius: imageSize / 2,
       x: 0,
       y: 0,
-      duration: 0.25,
-      ease: 'power2.out'
+      duration: 0.4,
+      ease: 'power2.inOut'
     }, 0)
     
-    // Stage 2: Circle expands horizontally into pill
-    tl.to(card, {
-      width: cardWidth * 0.6,
-      height: 200,
-      borderRadius: 100,
-      duration: 0.2,
-      ease: 'power2.inOut'
-    }, 0.25)
-    
-    // Stage 3: Pill expands vertically into rounded rectangle
+    // Stage 2: Card expands to full width, image slides left
     tl.to(card, {
       width: cardWidth,
-      height: cardHeight,
       borderRadius: 24,
+      duration: 0.35,
+      ease: 'power2.inOut'
+    }, 0.4)
+    
+    // Image container shrinks to left portion and squares off
+    tl.to(imageContainer, {
+      width: '45%',
+      borderRadius: '24px 0 0 24px',
+      duration: 0.35,
+      ease: 'power2.inOut'
+    }, 0.4)
+    
+    // Text content fades and slides in
+    tl.to(textContent, {
+      opacity: 1,
+      x: 0,
       duration: 0.3,
       ease: 'power2.out'
-    }, 0.45)
+    }, 0.55)
 
-    // Content fades in after shape is final
-    tl.to(content, {
-      opacity: 1,
-      duration: 0.25,
-      ease: 'power2.out'
-    }, 0.6)
-
-  }, [clickedPosition, cardWidth, cardHeight])
+  }, [clickedPosition, cardWidth, cardHeight, imageSize])
 
   const handleClose = () => {
     if (isClosing) return
     setIsClosing(true)
 
     const card = cardRef.current
-    const content = contentRef.current
+    const imageContainer = imageContainerRef.current
+    const textContent = textContentRef.current
     const overlay = overlayRef.current
 
     const tl = gsap.timeline({ onComplete: onClose })
 
-    // Fade content first
-    tl.to(content, {
+    // Text fades out and slides right
+    tl.to(textContent, {
       opacity: 0,
-      duration: 0.12,
-      ease: 'power2.in'
-    }, 0)
-
-    // Shrink to pill
-    tl.to(card, {
-      width: 300,
-      height: 150,
-      borderRadius: 75,
+      x: 30,
       duration: 0.2,
       ease: 'power2.in'
-    }, 0.08)
-
-    // Shrink to circle and fade
+    }, 0)
+    
+    // Image expands back to fill card, card shrinks to square
+    tl.to(imageContainer, {
+      width: '100%',
+      borderRadius: imageSize / 2,
+      duration: 0.3,
+      ease: 'power2.inOut'
+    }, 0.1)
+    
+    tl.to(card, {
+      width: imageSize,
+      borderRadius: imageSize / 2,
+      duration: 0.3,
+      ease: 'power2.inOut'
+    }, 0.1)
+    
+    // Circle shrinks and fades
     tl.to(card, {
       width: 100,
       height: 100,
       borderRadius: 50,
       opacity: 0,
-      duration: 0.2,
+      x: clickedPosition?.x || 0,
+      y: clickedPosition?.y || 0,
+      duration: 0.3,
       ease: 'power2.in'
-    }, 0.25)
+    }, 0.35)
+    
+    tl.to(imageContainer, {
+      borderRadius: 50,
+      duration: 0.3,
+      ease: 'power2.in'
+    }, 0.35)
 
     tl.to(overlay, {
       backgroundColor: 'rgba(0,0,0,0)',
-      duration: 0.25,
+      duration: 0.3,
       ease: 'power2.in'
-    }, 0.2)
+    }, 0.4)
   }
 
   return (
@@ -258,39 +279,33 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
         className="expanded-card"
         onClick={e => e.stopPropagation()}
       >
-        <div ref={contentRef} className="card-inner">
-          {/* Left: Image (cropped square) */}
-          <div className="expanded-image-container">
-            {item.image_url && (
-              <img ref={imageRef} src={item.image_url} alt="" className="expanded-image" />
-            )}
+        {/* Image container - animates independently */}
+        <div ref={imageContainerRef} className="expanded-image-container">
+          {item.image_url && (
+            <img src={item.image_url} alt="" className="expanded-image" />
+          )}
+        </div>
+        
+        {/* Text content - fades in after image slides */}
+        <div ref={textContentRef} className="expanded-content">
+          <button className="expanded-close" onClick={handleClose}>×</button>
+          
+          <div className="expanded-question">
+            {item.question_text}
           </div>
           
-          {/* Right: Content stack */}
-          <div className="expanded-content">
-            {/* Close button inside content area */}
-            <button className="expanded-close" onClick={handleClose}>×</button>
-            
-            {/* Top: Prompt */}
-            <div className="expanded-question">
-              {item.question_text}
-            </div>
-            
-            {/* Middle: Location */}
-            <div className="expanded-location">
-              {item.location_text && (
-                <>
-                  <span className="location-pin">📍</span>
-                  <span>{item.location_text}</span>
-                </>
-              )}
-              {!item.location_text && <span className="location-unknown">Location not specified</span>}
-            </div>
-            
-            {/* Bottom: Story/Answer */}
-            <div className="expanded-story">
-              {item.story_text}
-            </div>
+          <div className="expanded-location">
+            {item.location_text && (
+              <>
+                <span className="location-pin">📍</span>
+                <span>{item.location_text}</span>
+              </>
+            )}
+            {!item.location_text && <span className="location-unknown">Location not specified</span>}
+          </div>
+          
+          <div className="expanded-story">
+            {item.story_text}
           </div>
         </div>
       </div>
