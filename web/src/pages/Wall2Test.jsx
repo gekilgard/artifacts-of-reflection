@@ -168,18 +168,18 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
     // Overlay fades in
     tl.to(overlay, {
       backgroundColor: 'rgba(0,0,0,0.92)',
-      duration: 1.2,
+      duration: 2.5,
       ease: 'power2.inOut'
     }, 0)
     
-    // Stage 1: Circle grows to final image size (stays circular) - 1.5s
+    // Stage 1: Circle grows to final image size (stays circular) - 3s
     tl.to(card, {
       width: imageSize,
       height: imageSize,
       borderRadius: imageSize / 2,
       x: 0,
       y: 0,
-      duration: 1.5,
+      duration: 3,
       ease: 'power2.inOut'
     }, 0)
     
@@ -187,25 +187,25 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
     tl.to(card, {
       width: cardWidth,
       borderRadius: 24,
-      duration: 0.8,
+      duration: 1,
       ease: 'power2.inOut'
-    }, 1.5)
+    }, 3)
     
     // Image container shrinks to left portion and squares off
     tl.to(imageContainer, {
       width: '45%',
       borderRadius: '24px 0 0 24px',
-      duration: 0.8,
+      duration: 1,
       ease: 'power2.inOut'
-    }, 1.5)
+    }, 3)
     
     // Text content fades and slides in
     tl.to(textContent, {
       opacity: 1,
       x: 0,
-      duration: 0.6,
+      duration: 0.8,
       ease: 'power2.inOut'
-    }, 1.9)
+    }, 3.5)
 
   }, [clickedPosition, cardWidth, cardHeight, imageSize])
 
