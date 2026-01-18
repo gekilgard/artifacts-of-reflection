@@ -117,7 +117,7 @@ function InfiniteScrollController() {
   useEffect(() => {
     // Remove world bounds to allow infinite scrolling
     map.setMaxBounds(null)
-    map.setMinZoom(1)
+    map.setMinZoom(2)
     map.setMaxZoom(18)
     
     // Enable infinite scrolling by allowing longitude beyond ±180
@@ -540,6 +540,7 @@ export default function MapPage() {
         center={center} 
         zoom={zoom} 
         className="story-map-fullscreen"
+        minZoom={2}
         zoomControl={false}
         attributionControl={false}
         scrollWheelZoom={true}
