@@ -40,10 +40,10 @@ function usePhysicsSimulation(items, mousePos) {
       const circles = circlesRef.current
       const centerX = 0
       const centerY = 0
-      const gravity = 0.06
-      const damping = 0.95
-      const repulsion = 1400
-      const minDist = 118 // Bubbles just barely touch
+      const gravity = 0.04
+      const damping = 0.92
+      const circleRadius = 50
+      const minDist = circleRadius * 2 + 8 // Diameter + small gap (no overlap)
 
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
@@ -55,29 +55,34 @@ function usePhysicsSimulation(items, mousePos) {
         c.vx += (dx / dist) * gravity
         c.vy += (dy / dist) * gravity
 
-        // Repel from mouse cursor
+        // Gentle nudge from mouse cursor (much weaker - just a subtle push)
         if (mousePos.current.x !== null) {
           const mdx = c.x - mousePos.current.x
           const mdy = c.y - mousePos.current.y
           const mDist = Math.sqrt(mdx * mdx + mdy * mdy) || 1
-          if (mDist < 180) {
-            const mouseForce = 2500 / (mDist * mDist)
+          if (mDist < 80) {
+            // Very gentle push, falls off quickly
+            const mouseForce = 0.8 * (1 - mDist / 80)
             c.vx += (mdx / mDist) * mouseForce
             c.vy += (mdy / mDist) * mouseForce
           }
         }
 
-        // Repel from other circles
+        // Squishy collision with other circles (spring-like)
         for (let j = 0; j < circles.length; j++) {
           if (i === j) continue
           const other = circles[j]
           const odx = c.x - other.x
           const ody = c.y - other.y
           const oDist = Math.sqrt(odx * odx + ody * ody) || 1
+          
           if (oDist < minDist) {
-            const force = repulsion / (oDist * oDist)
-            c.vx += (odx / oDist) * force
-            c.vy += (ody / oDist) * force
+            // How much they're overlapping
+            const overlap = minDist - oDist
+            // Spring force - stronger when more overlap (squishy effect)
+            const springForce = overlap * 0.15
+            c.vx += (odx / oDist) * springForce
+            c.vy += (ody / oDist) * springForce
           }
         }
 
