@@ -36,15 +36,16 @@
   cursor: pointer;
   margin-left: -50px;
   margin-top: -50px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border: 3px solid var(--color-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.15);
   will-change: transform;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .physics-circle:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
   z-index: 10;
-  border-color: var(--color-accent, #fff);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Loading / Empty States */
@@ -68,28 +69,21 @@
   margin: 0;
 }
 
-/* Expanded Card Overlay */
+/* Expanded Card Overlay - GSAP controls animation */
 .expanded-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  transition: background 0.4s ease;
-  pointer-events: none;
-}
-
-.expanded-overlay.active {
-  background: rgba(0, 0, 0, 0.9);
   pointer-events: auto;
 }
 
-/* The card - horizontal layout for fullscreen feel */
+/* The card - horizontal fullscreen layout */
 .expanded-card {
   position: relative;
   background: var(--color-surface);
@@ -97,71 +91,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  max-width: 1400px;
+  max-height: calc(100vh - 60px);
 }
 
-/* Phase: entering (start as small circle) */
-.expanded-card.entering {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: none;
-}
-
-/* Phase: visible (expand to full horizontal card) */
-.expanded-card.visible {
-  width: calc(100vw - 60px);
-  max-width: 1100px;
-  height: auto;
-  max-height: calc(100vh - 80px);
-  border-radius: 24px;
-  opacity: 1;
-  transform: scale(1);
-  transition: 
-    width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    height 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    border-radius 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease,
-    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Phase: exiting (fade out smoothly) */
-.expanded-card.exiting {
-  width: calc(100vw - 60px);
-  max-width: 1100px;
-  border-radius: 24px;
-  opacity: 0;
-  transform: scale(0.95);
-  transition: 
-    opacity 0.4s ease,
-    transform 0.4s ease;
-}
-
-/* Inner content - fades in after card expands */
+/* Inner content wrapper */
 .card-inner {
   display: flex;
   flex-direction: row;
   width: 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.card-inner.show {
-  opacity: 1;
-  transition: opacity 0.4s ease 0.3s;
+  height: 100%;
 }
 
 .expanded-close {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
   border: none;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   color: white;
-  font-size: 24px;
+  font-size: 28px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 10;
@@ -169,21 +120,22 @@
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, transform 0.2s ease;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
 }
 
 .expanded-close:hover {
-  background: rgba(0, 0, 0, 0.6);
-  transform: scale(1.05);
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.08);
 }
 
-/* Image takes left side */
+/* Image takes left side - large */
 .expanded-image-container {
-  flex: 0 0 50%;
-  max-width: 50%;
-  aspect-ratio: 1;
+  flex: 0 0 55%;
+  max-width: 55%;
+  height: 100%;
+  min-height: 400px;
+  max-height: calc(100vh - 60px);
   overflow: hidden;
-  border-radius: 24px 0 0 24px;
 }
 
 .expanded-image {
@@ -195,44 +147,44 @@
 /* Content takes right side */
 .expanded-content {
   flex: 1;
-  padding: 40px;
+  padding: 48px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   overflow-y: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 60px);
 }
 
 .expanded-location {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 10px;
+  font-size: 15px;
   color: var(--color-text-secondary);
 }
 
 .location-pin {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .expanded-question {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 600;
   color: var(--color-text-primary);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .expanded-story {
-  font-size: 17px;
-  line-height: 1.7;
+  font-size: 18px;
+  line-height: 1.75;
   color: var(--color-text-secondary);
   white-space: pre-wrap;
 }
 
 .expanded-date {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text-tertiary);
-  padding-top: 20px;
+  padding-top: 24px;
   margin-top: auto;
   border-top: 1px solid var(--color-border);
 }
@@ -250,29 +202,27 @@
     flex-direction: column;
   }
   
-  .expanded-card.visible {
-    width: calc(100vw - 30px);
+  .expanded-card {
     max-height: calc(100vh - 40px);
-    border-radius: 20px;
   }
   
   .expanded-image-container {
     flex: 0 0 auto;
     max-width: 100%;
-    aspect-ratio: 16/9;
-    border-radius: 20px 20px 0 0;
+    min-height: 200px;
+    max-height: 40vh;
   }
   
   .expanded-content {
-    padding: 24px;
+    padding: 28px;
     max-height: none;
   }
   
   .expanded-question {
-    font-size: 18px;
+    font-size: 20px;
   }
   
   .expanded-story {
-    font-size: 15px;
+    font-size: 16px;
   }
 }

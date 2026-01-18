@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useLayoutEffect } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import gsap from 'gsap'
 import './Wall2Test.css'
 
 // Physics simulation for circles with mouse interaction
@@ -10,12 +11,12 @@ class PhysicsCircle {
     this.data = data
     // Start in a ring around center
     const angle = (index / total) * Math.PI * 2
-    const startRadius = 200 + Math.random() * 150
+    const startRadius = 180 + Math.random() * 120
     this.x = startRadius * Math.cos(angle)
     this.y = startRadius * Math.sin(angle)
     this.vx = 0
     this.vy = 0
-    this.radius = 55 // Slightly larger for spacing calculation
+    this.radius = 55
   }
 }
 
@@ -39,15 +40,15 @@ function usePhysicsSimulation(items, mousePos) {
       const circles = circlesRef.current
       const centerX = 0
       const centerY = 0
-      const gravity = 0.08
-      const damping = 0.94
-      const repulsion = 1200
-      const minDist = 115 // Circles barely touch
+      const gravity = 0.06
+      const damping = 0.95
+      const repulsion = 1400
+      const minDist = 118 // Bubbles just barely touch
 
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
         
-        // Attract to center (gentle)
+        // Attract to center (very gentle)
         const dx = centerX - c.x
         const dy = centerY - c.y
         const dist = Math.sqrt(dx * dx + dy * dy) || 1
@@ -59,8 +60,8 @@ function usePhysicsSimulation(items, mousePos) {
           const mdx = c.x - mousePos.current.x
           const mdy = c.y - mousePos.current.y
           const mDist = Math.sqrt(mdx * mdx + mdy * mdy) || 1
-          if (mDist < 150) {
-            const mouseForce = 2000 / (mDist * mDist)
+          if (mDist < 180) {
+            const mouseForce = 2500 / (mDist * mDist)
             c.vx += (mdx / mDist) * mouseForce
             c.vy += (mdy / mDist) * mouseForce
           }
@@ -105,32 +106,114 @@ function usePhysicsSimulation(items, mousePos) {
   return circles
 }
 
-function ExpandedCard({ item, onClose }) {
-  const [phase, setPhase] = useState('entering') // entering, visible, exiting
+function ExpandedCard({ item, onClose, clickedPosition }) {
+  const cardRef = useRef(null)
+  const contentRef = useRef(null)
+  const overlayRef = useRef(null)
+  const [isClosing, setIsClosing] = useState(false)
 
-  useEffect(() => {
-    // Small delay then expand
-    const timer = setTimeout(() => setPhase('visible'), 50)
-    return () => clearTimeout(timer)
-  }, [])
+  useLayoutEffect(() => {
+    const card = cardRef.current
+    const content = contentRef.current
+    const overlay = overlayRef.current
+    if (!card || !content || !overlay) return
+
+    // Kill any existing animations
+    gsap.killTweensOf([card, content, overlay])
+
+    // Set initial state (small circle at click position)
+    gsap.set(card, {
+      width: 100,
+      height: 100,
+      borderRadius: '50%',
+      opacity: 0,
+      scale: 0.5,
+      x: clickedPosition?.x || 0,
+      y: clickedPosition?.y || 0,
+    })
+    gsap.set(content, { opacity: 0 })
+    gsap.set(overlay, { backgroundColor: 'rgba(0,0,0,0)' })
+
+    // Animate to full card
+    const tl = gsap.timeline()
+    
+    tl.to(overlay, {
+      backgroundColor: 'rgba(0,0,0,0.92)',
+      duration: 0.4,
+      ease: 'power2.out'
+    }, 0)
+    
+    tl.to(card, {
+      width: 'calc(100vw - 40px)',
+      height: 'auto',
+      borderRadius: 24,
+      opacity: 1,
+      scale: 1,
+      x: 0,
+      y: 0,
+      duration: 0.8,
+      ease: 'power3.out'
+    }, 0)
+
+    tl.to(content, {
+      opacity: 1,
+      duration: 0.4,
+      ease: 'power2.out'
+    }, 0.5)
+
+  }, [clickedPosition])
 
   const handleClose = () => {
-    setPhase('exiting')
-    setTimeout(onClose, 500)
+    if (isClosing) return
+    setIsClosing(true)
+
+    const card = cardRef.current
+    const content = contentRef.current
+    const overlay = overlayRef.current
+
+    const tl = gsap.timeline({
+      onComplete: onClose
+    })
+
+    // Fade content first
+    tl.to(content, {
+      opacity: 0,
+      duration: 0.2,
+      ease: 'power2.in'
+    }, 0)
+
+    // Shrink card back to circle
+    tl.to(card, {
+      width: 100,
+      height: 100,
+      borderRadius: '50%',
+      opacity: 0,
+      scale: 0.5,
+      duration: 0.5,
+      ease: 'power3.in'
+    }, 0.1)
+
+    tl.to(overlay, {
+      backgroundColor: 'rgba(0,0,0,0)',
+      duration: 0.4,
+      ease: 'power2.in'
+    }, 0.2)
   }
 
   return (
     <div 
-      className={`expanded-overlay ${phase === 'visible' ? 'active' : ''}`} 
+      ref={overlayRef}
+      className="expanded-overlay" 
       onClick={handleClose}
     >
       <div 
-        className={`expanded-card ${phase}`}
+        ref={cardRef}
+        className="expanded-card"
         onClick={e => e.stopPropagation()}
       >
         <button className="expanded-close" onClick={handleClose}>×</button>
         
-        <div className={`card-inner ${phase === 'visible' ? 'show' : ''}`}>
+        <div ref={contentRef} className="card-inner">
           {item.image_url && (
             <div className="expanded-image-container">
               <img src={item.image_url} alt="" className="expanded-image" />
@@ -171,6 +254,7 @@ export default function Wall2Test() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [clickedPosition, setClickedPosition] = useState(null)
   const containerRef = useRef(null)
   const mousePos = useRef({ x: null, y: null })
 
@@ -190,6 +274,21 @@ export default function Wall2Test() {
 
   const handleMouseLeave = () => {
     mousePos.current = { x: null, y: null }
+  }
+
+  const handleCircleClick = (circle, e) => {
+    // Get click position relative to viewport center
+    const rect = e.currentTarget.getBoundingClientRect()
+    const viewportCenterX = window.innerWidth / 2
+    const viewportCenterY = window.innerHeight / 2
+    const circleCenterX = rect.left + rect.width / 2
+    const circleCenterY = rect.top + rect.height / 2
+    
+    setClickedPosition({
+      x: circleCenterX - viewportCenterX,
+      y: circleCenterY - viewportCenterY
+    })
+    setSelectedItem(circle.data)
   }
 
   useEffect(() => {
@@ -256,14 +355,18 @@ export default function Wall2Test() {
                 transform: `translate(${circle.x}px, ${circle.y}px)`,
                 backgroundImage: circle.imageUrl ? `url(${circle.imageUrl})` : 'none'
               }}
-              onClick={() => setSelectedItem(circle.data)}
+              onClick={(e) => handleCircleClick(circle, e)}
             />
           ))}
         </div>
       </div>
 
       {selectedItem && (
-        <ExpandedCard item={selectedItem} onClose={() => setSelectedItem(null)} />
+        <ExpandedCard 
+          item={selectedItem} 
+          clickedPosition={clickedPosition}
+          onClose={() => setSelectedItem(null)} 
+        />
       )}
     </div>
   )
