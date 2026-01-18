@@ -40,30 +40,30 @@ function usePhysicsSimulation(items) {
     setCircles([...circlesRef.current])
 
     const circleRadius = 50
-    const minDist = circleRadius * 2 + 4 // Exact touch with tiny buffer
+    const minDist = circleRadius * 2 + 4
 
     const simulate = () => {
       if (settled) return
 
       const circles = circlesRef.current
-      const centerX = 0
-      const centerY = 0
-      const damping = 0.8
+      const damping = 0.75
       
-      // Apply gentle center gravity
-      for (let i = 0; i < circles.length; i++) {
-        const c = circles[i]
-        const dx = centerX - c.x
-        const dy = centerY - c.y
-        const distFromCenter = Math.sqrt(dx * dx + dy * dy)
-        if (distFromCenter > 30) {
-          c.vx += (dx / distFromCenter) * 0.015
-          c.vy += (dy / distFromCenter) * 0.015
+      // Only apply gravity for first 50 frames to bring them together
+      if (frameCount.current < 50) {
+        for (let i = 0; i < circles.length; i++) {
+          const c = circles[i]
+          const dx = -c.x
+          const dy = -c.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist > 20) {
+            c.vx += (dx / dist) * 0.08
+            c.vy += (dy / dist) * 0.08
+          }
         }
       }
 
-      // Run collision resolution multiple times to guarantee no overlap
-      for (let iteration = 0; iteration < 8; iteration++) {
+      // Collision resolution - multiple passes
+      for (let iteration = 0; iteration < 10; iteration++) {
         for (let i = 0; i < circles.length; i++) {
           const c = circles[i]
           for (let j = i + 1; j < circles.length; j++) {
@@ -73,21 +73,20 @@ function usePhysicsSimulation(items) {
             const oDist = Math.sqrt(odx * odx + ody * ody)
             
             if (oDist < minDist && oDist > 0.001) {
-              // Push apart - full overlap resolution
-              const overlap = (minDist - oDist) / 2
+              const overlap = (minDist - oDist) / 2 + 0.5
               const nx = odx / oDist
               const ny = ody / oDist
               
-              c.x -= nx * overlap * 1.01 // Slight extra push
-              c.y -= ny * overlap * 1.01
-              other.x += nx * overlap * 1.01
-              other.y += ny * overlap * 1.01
+              c.x -= nx * overlap
+              c.y -= ny * overlap
+              other.x += nx * overlap
+              other.y += ny * overlap
             }
           }
         }
       }
 
-      // Update velocities and positions
+      // Apply velocity and damping
       let totalMovement = 0
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
@@ -100,8 +99,8 @@ function usePhysicsSimulation(items) {
 
       frameCount.current++
       
-      // Settle when barely moving
-      if (frameCount.current > 100 && totalMovement < 0.05) {
+      // After gravity phase, settle quickly when movement stops
+      if (frameCount.current > 60 && totalMovement < 0.02) {
         setSettled(true)
         circles.forEach(c => { c.vx = 0; c.vy = 0 })
       }
