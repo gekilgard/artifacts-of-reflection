@@ -121,26 +121,17 @@ function InfiniteScrollController() {
     // Enable infinite scrolling by allowing longitude beyond ±180
     map.options.crs.infinite = true
 
-    // Keep the north/south poles as hard limits (no whitespace beyond)
+    // Hard vertical bounds without drag jank; horizontal wraps via worldCopyJump
     const latLimit = 85
-    let lastValidCenter = map.getCenter()
-    const withinLatBounds = () => {
-      const bounds = map.getBounds()
-      return bounds.getNorth() <= latLimit && bounds.getSouth() >= -latLimit
-    }
-
-    const clampToLatBounds = () => {
-      if (withinLatBounds()) {
-        lastValidCenter = map.getCenter()
-        return
-      }
-      map.panTo(lastValidCenter, { animate: false })
-    }
-
-    map.on('move', clampToLatBounds)
+    const bounds = L.latLngBounds(
+      L.latLng(-latLimit, -180),
+      L.latLng(latLimit, 180)
+    )
+    map.setMaxBounds(bounds)
+    map.setMaxBoundsViscosity(1.0)
     
     return () => {
-      map.off('move', clampToLatBounds)
+      map.setMaxBounds(null)
     }
   }, [map])
   
@@ -565,7 +556,7 @@ export default function MapPage() {
         doubleClickZoom={true}
         boxZoom={false}
         keyboard={false}
-        worldCopyJump={false} // Disable Leaflet's default world jumping
+        worldCopyJump={true} // Keep horizontal wrap without leaving bounds
       >
         <InfiniteScrollController />
         <DynamicTileLayer />
