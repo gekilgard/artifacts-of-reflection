@@ -3,28 +3,26 @@ import { supabase } from '../lib/supabaseClient.js'
 import gsap from 'gsap'
 import './Wall2Test.css'
 
-// Physics simulation for circles
+// Physics simulation for circles with gravity and collisions
 class PhysicsCircle {
   constructor(id, imageUrl, data, index, total) {
     this.id = id
     this.imageUrl = imageUrl
     this.data = data
-    // Start clustered near center - collision will spread them out
+    // Start in a ring around center
     const angle = (index / total) * Math.PI * 2
-    const startRadius = 20 + Math.random() * 30 // All start near center
+    const startRadius = 150 + Math.random() * 100
     this.x = startRadius * Math.cos(angle)
     this.y = startRadius * Math.sin(angle)
-    this.vx = 0
-    this.vy = 0
+    this.vx = (Math.random() - 0.5) * 2
+    this.vy = (Math.random() - 0.5) * 2
   }
 }
 
-function usePhysicsSimulation(items) {
+function usePhysicsSimulation(items, mousePos) {
   const [circles, setCircles] = useState([])
-  const [settled, setSettled] = useState(false)
   const animationRef = useRef()
   const circlesRef = useRef([])
-  const frameCount = useRef(0)
 
   useEffect(() => {
     if (!items.length) return
@@ -34,82 +32,93 @@ function usePhysicsSimulation(items) {
       circlesRef.current = items.map((item, i) => 
         new PhysicsCircle(item.id, item.image_url, item, i, items.length)
       )
-      setSettled(false)
-      frameCount.current = 0
     }
     setCircles([...circlesRef.current])
 
     const circleRadius = 50
-    const minDist = circleRadius * 2 + 4
+    const minDist = circleRadius * 2 + 6 // Slight gap between circles
 
     const simulate = () => {
-      if (settled) return
-
       const circles = circlesRef.current
-      const damping = 0.75
-      
-      // Brief gravity to cluster them, only first 30 frames
-      if (frameCount.current < 30) {
-        for (let i = 0; i < circles.length; i++) {
-          const c = circles[i]
-          const dx = -c.x
-          const dy = -c.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist > 5) {
-            c.vx += (dx / dist) * 0.5
-            c.vy += (dy / dist) * 0.5
+      const damping = 0.985 // High damping for smooth movement
+      const gravity = 0.03 // Gentle pull to center
+      const bounce = 0.4 // Bounce factor on collision
+
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i]
+        
+        // Gravitational pull toward center
+        const dx = -c.x
+        const dy = -c.y
+        const distToCenter = Math.sqrt(dx * dx + dy * dy)
+        if (distToCenter > 10) {
+          c.vx += (dx / distToCenter) * gravity
+          c.vy += (dy / distToCenter) * gravity
+        }
+
+        // Subtle cursor repulsion (very gentle - still clickable)
+        if (mousePos.current.x !== null) {
+          const mdx = c.x - mousePos.current.x
+          const mdy = c.y - mousePos.current.y
+          const mDist = Math.sqrt(mdx * mdx + mdy * mdy)
+          if (mDist < 120 && mDist > 0) {
+            // Very gentle push, linear falloff
+            const force = 0.15 * (1 - mDist / 120)
+            c.vx += (mdx / mDist) * force
+            c.vy += (mdy / mDist) * force
           }
         }
       }
-      
-      // Collision resolution - multiple passes
-      for (let iteration = 0; iteration < 10; iteration++) {
-        for (let i = 0; i < circles.length; i++) {
-          const c = circles[i]
-          for (let j = i + 1; j < circles.length; j++) {
-            const other = circles[j]
-            const odx = other.x - c.x
-            const ody = other.y - c.y
-            const oDist = Math.sqrt(odx * odx + ody * ody)
+
+      // Collision detection and response
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i]
+        for (let j = i + 1; j < circles.length; j++) {
+          const other = circles[j]
+          const odx = other.x - c.x
+          const ody = other.y - c.y
+          const oDist = Math.sqrt(odx * odx + ody * ody)
+          
+          if (oDist < minDist && oDist > 0.001) {
+            // Normalize collision vector
+            const nx = odx / oDist
+            const ny = ody / oDist
             
-            if (oDist < minDist && oDist > 0.001) {
-              const overlap = (minDist - oDist) / 2 + 0.5
-              const nx = odx / oDist
-              const ny = ody / oDist
-              
-              c.x -= nx * overlap
-              c.y -= ny * overlap
-              other.x += nx * overlap
-              other.y += ny * overlap
+            // Separate circles (position correction)
+            const overlap = (minDist - oDist) / 2
+            c.x -= nx * overlap
+            c.y -= ny * overlap
+            other.x += nx * overlap
+            other.y += ny * overlap
+            
+            // Calculate relative velocity
+            const dvx = c.vx - other.vx
+            const dvy = c.vy - other.vy
+            const dvn = dvx * nx + dvy * ny
+            
+            // Only resolve if circles are approaching
+            if (dvn > 0) {
+              // Apply bounce impulse
+              c.vx -= dvn * nx * bounce
+              c.vy -= dvn * ny * bounce
+              other.vx += dvn * nx * bounce
+              other.vy += dvn * ny * bounce
             }
           }
         }
       }
 
       // Apply velocity and damping
-      let totalMovement = 0
       for (let i = 0; i < circles.length; i++) {
         const c = circles[i]
         c.vx *= damping
         c.vy *= damping
         c.x += c.vx
         c.y += c.vy
-        totalMovement += Math.abs(c.vx) + Math.abs(c.vy)
-      }
-
-      frameCount.current++
-      
-      // After gravity phase, settle quickly when movement stops
-      if (frameCount.current > 60 && totalMovement < 0.02) {
-        setSettled(true)
-        circles.forEach(c => { c.vx = 0; c.vy = 0 })
       }
 
       setCircles([...circlesRef.current])
-      
-      if (!settled) {
-        animationRef.current = requestAnimationFrame(simulate)
-      }
+      animationRef.current = requestAnimationFrame(simulate)
     }
 
     animationRef.current = requestAnimationFrame(simulate)
@@ -119,7 +128,7 @@ function usePhysicsSimulation(items) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [items, settled])
+  }, [items, mousePos])
 
   return circles
 }
@@ -326,8 +335,25 @@ export default function Wall2Test() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [clickedPosition, setClickedPosition] = useState(null)
   const containerRef = useRef(null)
+  const mousePos = useRef({ x: null, y: null })
 
-  const circles = usePhysicsSimulation(items)
+  const circles = usePhysicsSimulation(items, mousePos)
+
+  // Track mouse position relative to center of container
+  const handleMouseMove = (e) => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    mousePos.current = {
+      x: e.clientX - rect.left - centerX,
+      y: e.clientY - rect.top - centerY
+    }
+  }
+
+  const handleMouseLeave = () => {
+    mousePos.current = { x: null, y: null }
+  }
 
   const handleCircleClick = (circle, e) => {
     // Get click position relative to viewport center
@@ -393,7 +419,12 @@ export default function Wall2Test() {
 
   return (
     <div className="wall2-page">
-      <div className="wall2-container" ref={containerRef}>
+      <div 
+        className="wall2-container" 
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="circles-container">
           {circles.map(circle => (
             <div
