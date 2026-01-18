@@ -120,7 +120,6 @@ function InfiniteScrollController() {
     let isClamping = false
     const clampLat = () => {
       if (isClamping) return
-      if (map.getZoom() > map.getMinZoom()) return
       const center = map.getCenter()
       const bounds = map.getBounds()
       const maxCenterLat = latLimit - (bounds.getNorth() - center.lat)
