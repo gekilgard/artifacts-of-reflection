@@ -33,10 +33,10 @@ export default function Submit() {
       if (file) {
         if (!supabase) throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY')
         const ext = file.name.split('.').pop()
-        const path = `stories/${crypto.randomUUID()}.${ext}`
-        const { error: upErr } = await supabase.storage.from('stories').upload(path, file, { upsert: false })
+        const path = `submissions/${crypto.randomUUID()}.${ext}`
+        const { error: upErr } = await supabase.storage.from('submissions').upload(path, file, { upsert: false })
         if (upErr) throw upErr
-        const { data } = supabase.storage.from('stories').getPublicUrl(path)
+        const { data } = supabase.storage.from('submissions').getPublicUrl(path)
         image_url = data.publicUrl
       }
 
