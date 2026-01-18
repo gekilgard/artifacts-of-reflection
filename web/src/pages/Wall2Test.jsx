@@ -48,20 +48,6 @@ function usePhysicsSimulation(items) {
       const circles = circlesRef.current
       const damping = 0.75
       
-      // Only apply gravity for first 50 frames to bring them together
-      if (frameCount.current < 50) {
-        for (let i = 0; i < circles.length; i++) {
-          const c = circles[i]
-          const dx = -c.x
-          const dy = -c.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist > 20) {
-            c.vx += (dx / dist) * 0.08
-            c.vy += (dy / dist) * 0.08
-          }
-        }
-      }
-
       // Collision resolution - multiple passes
       for (let iteration = 0; iteration < 10; iteration++) {
         for (let i = 0; i < circles.length; i++) {
