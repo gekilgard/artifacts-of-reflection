@@ -116,7 +116,7 @@ function InfiniteScrollController() {
   
   useEffect(() => {
     // Lock vertical panning while keeping horizontal infinite scrolling
-    const latLimit = 85
+    const latLimit = 50
     let isClamping = false
     const clampLat = () => {
       if (isClamping) return
