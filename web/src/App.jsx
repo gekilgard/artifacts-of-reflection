@@ -9,7 +9,6 @@ import './components/components.css'
 const MapPage = lazy(() => import('./pages/Map.jsx'))
 const Submit = lazy(() => import('./pages/Submit.jsx'))
 const Wall = lazy(() => import('./pages/Wall.jsx'))
-const Wall2Test = lazy(() => import('./pages/Wall2Test.jsx'))
 
 function Navigation() {
   const location = useLocation()
@@ -67,7 +66,6 @@ export default function App() {
             <Route path="/submit" element={<Submit />} />
             <Route path="/wall" element={<Wall />} />
             <Route path="/map" element={<MapPage />} />
-            <Route path="/wall2test" element={<Wall2Test />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
