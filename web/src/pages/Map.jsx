@@ -117,19 +117,6 @@ function InfiniteScrollController() {
   useEffect(() => {
     map.setMinZoom(2)
     map.setMaxZoom(18)
-    
-    // Hard bounds to prevent whitespace beyond poles
-    const latLimit = 85
-    const bounds = L.latLngBounds(
-      L.latLng(-latLimit, -180),
-      L.latLng(latLimit, 180)
-    )
-    map.setMaxBounds(bounds)
-    map.setMaxBoundsViscosity(1.0)
-    
-    return () => {
-      map.setMaxBounds(null)
-    }
   }, [map])
   
   return null
@@ -497,6 +484,10 @@ export default function MapPage() {
 
   const center = [20, 0] // world view
   const zoom = 2
+  const maxBounds = L.latLngBounds(
+    L.latLng(-85, -180),
+    L.latLng(85, 180)
+  )
 
   // Prevent page scrolling when map is active
   useEffect(() => {
@@ -545,6 +536,8 @@ export default function MapPage() {
         zoom={zoom} 
         className="story-map-fullscreen"
         minZoom={2}
+        maxBounds={maxBounds}
+        maxBoundsViscosity={1.0}
         zoomControl={false}
         attributionControl={false}
         scrollWheelZoom={true}
