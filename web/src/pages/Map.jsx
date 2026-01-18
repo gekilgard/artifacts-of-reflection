@@ -117,19 +117,22 @@ function InfiniteScrollController() {
   useEffect(() => {
     // Lock vertical panning while keeping horizontal infinite scrolling
     const latLimit = 85
-    map.setMaxBounds([
-      [-latLimit, -100000],
-      [latLimit, 100000]
-    ])
-    map.setMaxBoundsViscosity(1.0)
+    const clampLat = () => {
+      const center = map.getCenter()
+      const clampedLat = Math.max(-latLimit, Math.min(latLimit, center.lat))
+      if (center.lat !== clampedLat) {
+        map.setView([clampedLat, center.lng], map.getZoom(), { animate: false })
+      }
+    }
     map.setMinZoom(2)
     map.setMaxZoom(18)
     
     // Enable infinite scrolling by allowing longitude beyond ±180
     map.options.crs.infinite = true
+    map.on('moveend', clampLat)
     
     return () => {
-      // Cleanup if needed
+      map.off('moveend', clampLat)
     }
   }, [map])
   
