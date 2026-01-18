@@ -128,59 +128,79 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
   const cardRef = useRef(null)
   const contentRef = useRef(null)
   const overlayRef = useRef(null)
+  const imageRef = useRef(null)
   const [isClosing, setIsClosing] = useState(false)
   
   // Fixed card dimensions
-  const cardWidth = Math.min(900, window.innerWidth - 40)
-  const cardHeight = Math.min(500, window.innerHeight - 80)
+  const cardWidth = Math.min(1000, window.innerWidth - 60)
+  const cardHeight = Math.min(560, window.innerHeight - 100)
 
   useLayoutEffect(() => {
     const card = cardRef.current
     const content = contentRef.current
     const overlay = overlayRef.current
+    const image = imageRef.current
     if (!card || !content || !overlay) return
 
     gsap.killTweensOf([card, content, overlay])
 
-    // Start as small circle at click position
+    // Stage 1: Start as small circle at click position (with image visible)
     gsap.set(card, {
       width: 100,
       height: 100,
       borderRadius: 50,
-      opacity: 0.8,
+      opacity: 1,
       x: clickedPosition?.x || 0,
       y: clickedPosition?.y || 0,
     })
     gsap.set(content, { opacity: 0 })
     gsap.set(overlay, { backgroundColor: 'rgba(0,0,0,0)' })
+    if (image) gsap.set(image, { opacity: 1 })
 
     const tl = gsap.timeline()
     
-    // Fade in overlay
+    // Overlay fades in
     tl.to(overlay, {
-      backgroundColor: 'rgba(0,0,0,0.9)',
-      duration: 0.3,
+      backgroundColor: 'rgba(0,0,0,0.92)',
+      duration: 0.4,
       ease: 'power2.out'
     }, 0)
     
-    // Morph to rectangle - fixed dimensions, no auto
+    // Stage 1: Circle zooms in and moves to center
+    tl.to(card, {
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      x: 0,
+      y: 0,
+      duration: 0.25,
+      ease: 'power2.out'
+    }, 0)
+    
+    // Stage 2: Circle expands horizontally into pill
+    tl.to(card, {
+      width: cardWidth * 0.6,
+      height: 200,
+      borderRadius: 100,
+      duration: 0.2,
+      ease: 'power2.inOut'
+    }, 0.25)
+    
+    // Stage 3: Pill expands vertically into rounded rectangle
     tl.to(card, {
       width: cardWidth,
       height: cardHeight,
-      borderRadius: 20,
-      opacity: 1,
-      x: 0,
-      y: 0,
-      duration: 0.5,
-      ease: 'power2.out'
-    }, 0)
-
-    // Fade in content after morph
-    tl.to(content, {
-      opacity: 1,
+      borderRadius: 24,
       duration: 0.3,
       ease: 'power2.out'
-    }, 0.35)
+    }, 0.45)
+
+    // Content fades in after shape is final
+    tl.to(content, {
+      opacity: 1,
+      duration: 0.25,
+      ease: 'power2.out'
+    }, 0.6)
 
   }, [clickedPosition, cardWidth, cardHeight])
 
@@ -194,28 +214,37 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
 
     const tl = gsap.timeline({ onComplete: onClose })
 
-    // Fade content immediately
+    // Fade content first
     tl.to(content, {
       opacity: 0,
-      duration: 0.15,
+      duration: 0.12,
       ease: 'power2.in'
     }, 0)
 
-    // Shrink to circle
+    // Shrink to pill
+    tl.to(card, {
+      width: 300,
+      height: 150,
+      borderRadius: 75,
+      duration: 0.2,
+      ease: 'power2.in'
+    }, 0.08)
+
+    // Shrink to circle and fade
     tl.to(card, {
       width: 100,
       height: 100,
       borderRadius: 50,
       opacity: 0,
-      duration: 0.35,
+      duration: 0.2,
       ease: 'power2.in'
-    }, 0.1)
+    }, 0.25)
 
     tl.to(overlay, {
       backgroundColor: 'rgba(0,0,0,0)',
-      duration: 0.3,
+      duration: 0.25,
       ease: 'power2.in'
-    }, 0.15)
+    }, 0.2)
   }
 
   return (
@@ -229,18 +258,19 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
         className="expanded-card"
         onClick={e => e.stopPropagation()}
       >
-        <button className="expanded-close" onClick={handleClose}>×</button>
-        
         <div ref={contentRef} className="card-inner">
           {/* Left: Image (cropped square) */}
           <div className="expanded-image-container">
             {item.image_url && (
-              <img src={item.image_url} alt="" className="expanded-image" />
+              <img ref={imageRef} src={item.image_url} alt="" className="expanded-image" />
             )}
           </div>
           
           {/* Right: Content stack */}
           <div className="expanded-content">
+            {/* Close button inside content area */}
+            <button className="expanded-close" onClick={handleClose}>×</button>
+            
             {/* Top: Prompt */}
             <div className="expanded-question">
               {item.question_text}
