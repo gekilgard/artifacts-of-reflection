@@ -243,27 +243,27 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
       ease: 'power2.inOut'
     }, 0.2)
     
-    // Circle shrinks back to thumbnail size - 1.5s
+    // Circle shrinks back to thumbnail size - 2s
     tl.to(card, {
       width: 100,
       height: 100,
       borderRadius: 50,
       x: clickedPosition?.x || 0,
       y: clickedPosition?.y || 0,
-      duration: 1.5,
+      duration: 2,
       ease: 'power2.inOut'
     }, 0.6)
     
     tl.to(imageContainer, {
       borderRadius: 50,
-      duration: 1.5,
+      duration: 2,
       ease: 'power2.inOut'
     }, 0.6)
 
     // Overlay fades during shrink
     tl.to(overlay, {
       backgroundColor: 'rgba(0,0,0,0)',
-      duration: 1.2,
+      duration: 1.6,
       ease: 'power2.inOut'
     }, 0.8)
     
@@ -272,7 +272,7 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
       opacity: 0,
       duration: 0.2,
       ease: 'power2.in'
-    }, 2.0)
+    }, 2.5)
   }
 
   return (
