@@ -129,6 +129,10 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
   const contentRef = useRef(null)
   const overlayRef = useRef(null)
   const [isClosing, setIsClosing] = useState(false)
+  
+  // Fixed card dimensions
+  const cardWidth = Math.min(900, window.innerWidth - 40)
+  const cardHeight = Math.min(500, window.innerHeight - 80)
 
   useLayoutEffect(() => {
     const card = cardRef.current
@@ -136,50 +140,49 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
     const overlay = overlayRef.current
     if (!card || !content || !overlay) return
 
-    // Kill any existing animations
     gsap.killTweensOf([card, content, overlay])
 
-    // Set initial state (small circle at click position)
+    // Start as small circle at click position
     gsap.set(card, {
       width: 100,
       height: 100,
-      borderRadius: '50%',
-      opacity: 0,
-      scale: 0.5,
+      borderRadius: 50,
+      opacity: 0.8,
       x: clickedPosition?.x || 0,
       y: clickedPosition?.y || 0,
     })
     gsap.set(content, { opacity: 0 })
     gsap.set(overlay, { backgroundColor: 'rgba(0,0,0,0)' })
 
-    // Animate to full card
     const tl = gsap.timeline()
     
+    // Fade in overlay
     tl.to(overlay, {
-      backgroundColor: 'rgba(0,0,0,0.92)',
-      duration: 0.4,
+      backgroundColor: 'rgba(0,0,0,0.9)',
+      duration: 0.3,
       ease: 'power2.out'
     }, 0)
     
+    // Morph to rectangle - fixed dimensions, no auto
     tl.to(card, {
-      width: 'calc(100vw - 40px)',
-      height: 'auto',
-      borderRadius: 24,
+      width: cardWidth,
+      height: cardHeight,
+      borderRadius: 20,
       opacity: 1,
-      scale: 1,
       x: 0,
       y: 0,
-      duration: 0.8,
-      ease: 'power3.out'
+      duration: 0.5,
+      ease: 'power2.out'
     }, 0)
 
+    // Fade in content after morph
     tl.to(content, {
       opacity: 1,
-      duration: 0.4,
+      duration: 0.3,
       ease: 'power2.out'
-    }, 0.5)
+    }, 0.35)
 
-  }, [clickedPosition])
+  }, [clickedPosition, cardWidth, cardHeight])
 
   const handleClose = () => {
     if (isClosing) return
@@ -189,33 +192,30 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
     const content = contentRef.current
     const overlay = overlayRef.current
 
-    const tl = gsap.timeline({
-      onComplete: onClose
-    })
+    const tl = gsap.timeline({ onComplete: onClose })
 
-    // Fade content first
+    // Fade content immediately
     tl.to(content, {
       opacity: 0,
-      duration: 0.2,
+      duration: 0.15,
       ease: 'power2.in'
     }, 0)
 
-    // Shrink card back to circle
+    // Shrink to circle
     tl.to(card, {
       width: 100,
       height: 100,
-      borderRadius: '50%',
+      borderRadius: 50,
       opacity: 0,
-      scale: 0.5,
-      duration: 0.5,
-      ease: 'power3.in'
+      duration: 0.35,
+      ease: 'power2.in'
     }, 0.1)
 
     tl.to(overlay, {
       backgroundColor: 'rgba(0,0,0,0)',
-      duration: 0.4,
+      duration: 0.3,
       ease: 'power2.in'
-    }, 0.2)
+    }, 0.15)
   }
 
   return (
@@ -232,34 +232,34 @@ function ExpandedCard({ item, onClose, clickedPosition }) {
         <button className="expanded-close" onClick={handleClose}>×</button>
         
         <div ref={contentRef} className="card-inner">
-          {item.image_url && (
-            <div className="expanded-image-container">
+          {/* Left: Image (cropped square) */}
+          <div className="expanded-image-container">
+            {item.image_url && (
               <img src={item.image_url} alt="" className="expanded-image" />
-            </div>
-          )}
-          
-          <div className="expanded-content">
-            {item.location_text && (
-              <div className="expanded-location">
-                <span className="location-pin">📍</span>
-                <span>{item.location_text}</span>
-              </div>
             )}
-            
+          </div>
+          
+          {/* Right: Content stack */}
+          <div className="expanded-content">
+            {/* Top: Prompt */}
             <div className="expanded-question">
               {item.question_text}
             </div>
             
-            <div className="expanded-story">
-              {item.story_text}
+            {/* Middle: Location */}
+            <div className="expanded-location">
+              {item.location_text && (
+                <>
+                  <span className="location-pin">📍</span>
+                  <span>{item.location_text}</span>
+                </>
+              )}
+              {!item.location_text && <span className="location-unknown">Location not specified</span>}
             </div>
             
-            <div className="expanded-date">
-              {new Date(item.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+            {/* Bottom: Story/Answer */}
+            <div className="expanded-story">
+              {item.story_text}
             </div>
           </div>
         </div>

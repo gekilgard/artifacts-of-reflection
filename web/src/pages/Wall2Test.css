@@ -16,7 +16,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: default;
 }
 
 .circles-container {
@@ -69,7 +68,7 @@
   margin: 0;
 }
 
-/* Expanded Card Overlay - GSAP controls animation */
+/* Expanded Card Overlay */
 .expanded-overlay {
   position: fixed;
   top: 0;
@@ -80,22 +79,41 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  pointer-events: auto;
 }
 
-/* The card - horizontal fullscreen layout */
+/* The card container - GSAP controls size */
 .expanded-card {
   position: relative;
   background: var(--color-surface);
   overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.expanded-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 1400px;
-  max-height: calc(100vh - 60px);
+  transition: background 0.2s ease;
+  backdrop-filter: blur(4px);
 }
 
-/* Inner content wrapper */
+.expanded-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Inner layout - horizontal split */
 .card-inner {
   display: flex;
   flex-direction: row;
@@ -103,38 +121,11 @@
   height: 100%;
 }
 
-.expanded-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
-  border: none;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  font-size: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease;
-  backdrop-filter: blur(8px);
-}
-
-.expanded-close:hover {
-  background: rgba(0, 0, 0, 0.7);
-  transform: scale(1.08);
-}
-
-/* Image takes left side - large */
+/* Left side: Square cropped image */
 .expanded-image-container {
-  flex: 0 0 55%;
-  max-width: 55%;
+  flex: 0 0 45%;
   height: 100%;
-  min-height: 400px;
-  max-height: calc(100vh - 60px);
+  background: var(--color-background);
   overflow: hidden;
 }
 
@@ -144,53 +135,66 @@
   object-fit: cover;
 }
 
-/* Content takes right side */
+/* Right side: Content stack (prompt, location, answer) */
 .expanded-content {
   flex: 1;
-  padding: 48px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  overflow-y: auto;
-  max-height: calc(100vh - 60px);
+  padding: 28px;
+  gap: 0;
+  overflow: hidden;
 }
 
+/* Top section: Prompt/Question */
+.expanded-question {
+  flex: 0 0 auto;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Middle section: Location */
 .expanded-location {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 15px;
+  gap: 8px;
+  font-size: 14px;
   color: var(--color-text-secondary);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .location-pin {
-  font-size: 20px;
+  font-size: 16px;
 }
 
-.expanded-question {
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  line-height: 1.35;
+.location-unknown {
+  font-style: italic;
+  opacity: 0.6;
 }
 
+/* Bottom section: Story/Answer - takes remaining space */
 .expanded-story {
-  font-size: 18px;
-  line-height: 1.75;
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.65;
   color: var(--color-text-secondary);
   white-space: pre-wrap;
+  overflow-y: auto;
+  padding-top: 16px;
 }
 
+/* Date removed from this layout for cleaner look */
 .expanded-date {
-  font-size: 14px;
-  color: var(--color-text-tertiary);
-  padding-top: 24px;
-  margin-top: auto;
-  border-top: 1px solid var(--color-border);
+  display: none;
 }
 
-/* Responsive - stack vertically on mobile */
-@media (max-width: 900px) {
+/* Responsive - stack on mobile */
+@media (max-width: 700px) {
   .physics-circle {
     width: 80px;
     height: 80px;
@@ -202,27 +206,20 @@
     flex-direction: column;
   }
   
-  .expanded-card {
-    max-height: calc(100vh - 40px);
-  }
-  
   .expanded-image-container {
-    flex: 0 0 auto;
-    max-width: 100%;
-    min-height: 200px;
-    max-height: 40vh;
+    flex: 0 0 40%;
+    width: 100%;
   }
   
   .expanded-content {
-    padding: 28px;
-    max-height: none;
+    padding: 20px;
   }
   
   .expanded-question {
-    font-size: 20px;
+    font-size: 16px;
   }
   
   .expanded-story {
-    font-size: 16px;
+    font-size: 14px;
   }
 }
