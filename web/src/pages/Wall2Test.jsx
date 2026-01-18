@@ -9,9 +9,9 @@ class PhysicsCircle {
     this.id = id
     this.imageUrl = imageUrl
     this.data = data
-    // Start in a spiral pattern to avoid initial overlap
-    const angle = (index / total) * Math.PI * 2 * 3 // 3 rotations
-    const startRadius = 60 + index * 25
+    // Start clustered near center - collision will spread them out
+    const angle = (index / total) * Math.PI * 2
+    const startRadius = 20 + Math.random() * 30 // All start near center
     this.x = startRadius * Math.cos(angle)
     this.y = startRadius * Math.sin(angle)
     this.vx = 0
@@ -47,6 +47,20 @@ function usePhysicsSimulation(items) {
 
       const circles = circlesRef.current
       const damping = 0.75
+      
+      // Brief gravity to cluster them, only first 30 frames
+      if (frameCount.current < 30) {
+        for (let i = 0; i < circles.length; i++) {
+          const c = circles[i]
+          const dx = -c.x
+          const dy = -c.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist > 5) {
+            c.vx += (dx / dist) * 0.5
+            c.vy += (dy / dist) * 0.5
+          }
+        }
+      }
       
       // Collision resolution - multiple passes
       for (let iteration = 0; iteration < 10; iteration++) {
