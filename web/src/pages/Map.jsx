@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, useMap, Marker } from 'react-leaflet'
 import { Link } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -338,8 +338,50 @@ function HeatmapLayer({ points }) {
   return null
 }
 
+function DetailModal({ item, onClose }) {
+  if (!item) return null
+
+  return (
+    <div className="detail-modal" onClick={onClose}>
+      <div className="detail-modal-content" onClick={e => e.stopPropagation()}>
+        <button className="detail-modal-close" onClick={onClose}>
+          ×
+        </button>
+
+        {item.image_url && (
+          <img 
+            src={item.image_url} 
+            alt="" 
+            className="detail-modal-image"
+          />
+        )}
+
+        <div className="detail-modal-question">
+          {item.question_text}
+        </div>
+
+        <div className="detail-modal-story">
+          {item.story_text}
+        </div>
+
+        <div className="detail-modal-meta">
+          {item.location_text && (
+            <div className="detail-modal-location">
+              <span>📍</span>
+              <span>{item.location_text}</span>
+            </div>
+          )}
+          <div className="detail-modal-date">
+            {new Date(item.created_at).toLocaleString()}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Dynamic marker component that generates markers based on current view
-function DynamicMarkers({ items }) {
+function DynamicMarkers({ items, onSelect }) {
   const map = useMap()
   const [visibleMarkers, setVisibleMarkers] = useState([])
   
@@ -394,32 +436,13 @@ function DynamicMarkers({ items }) {
   return (
     <>
       {visibleMarkers.map(item => (
-        <Marker key={item.id} position={[item.lat, item.lng]}>
-          <Popup maxWidth={300} className="story-popup">
-            <div className="popup-content">
-              {item.image_url && (
-                <img 
-                  src={item.image_url} 
-                  alt="" 
-                  className="popup-image"
-                />
-              )}
-              <div className="popup-question">{item.question_text}</div>
-              <div className="popup-story">{item.story_text}</div>
-              <div className="popup-meta">
-                {item.location_text && (
-                  <div className="popup-location">
-                    <span>📍</span>
-                    <span>{item.location_text}</span>
-                  </div>
-                )}
-                <div className="popup-date">
-                  {new Date(item.created_at).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-          </Popup>
-        </Marker>
+        <Marker
+          key={item.id}
+          position={[item.lat, item.lng]}
+          eventHandlers={{
+            click: () => onSelect(item)
+          }}
+        />
       ))}
     </>
   )
@@ -430,6 +453,7 @@ export default function MapPage() {
   const [processedPoints, setProcessedPoints] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, cities: 0 })
+  const [selectedItem, setSelectedItem] = useState(null)
 
   useEffect(() => {
     let ignore = false
@@ -529,7 +553,7 @@ export default function MapPage() {
         <InfiniteScrollController />
         <DynamicTileLayer />
         <HeatmapLayer points={processedPoints} />
-        <DynamicMarkers items={items} />
+        <DynamicMarkers items={items} onSelect={setSelectedItem} />
       </MapContainer>
         
       <div className="map-overlay-info">
@@ -537,6 +561,8 @@ export default function MapPage() {
           Locations are approximate for privacy
         </div>
       </div>
+
+      <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
     </div>
   )
 }
