@@ -118,10 +118,7 @@ function InfiniteScrollController() {
     map.setMinZoom(2)
     map.setMaxZoom(18)
     
-    // Enable infinite scrolling by allowing longitude beyond ±180
-    map.options.crs.infinite = true
-
-    // Hard vertical bounds without drag jank; horizontal wraps via worldCopyJump
+    // Hard bounds to prevent whitespace beyond poles
     const latLimit = 85
     const bounds = L.latLngBounds(
       L.latLng(-latLimit, -180),
@@ -556,7 +553,7 @@ export default function MapPage() {
         doubleClickZoom={true}
         boxZoom={false}
         keyboard={false}
-        worldCopyJump={true} // Keep horizontal wrap without leaving bounds
+        worldCopyJump={false}
       >
         <InfiniteScrollController />
         <DynamicTileLayer />
