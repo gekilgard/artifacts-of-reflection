@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabaseClient'
 import './Home.css'
 
 export default function Home() {
@@ -7,7 +8,17 @@ export default function Home() {
   const [selectedPrompt, setSelectedPrompt] = useState(null)
 
   useEffect(() => {
-    fetch('/prompt.json').then(r => r.json()).then(setPrompts).catch(() => setPrompts([]))
+    async function fetchPrompts() {
+      const { data, error } = await supabase
+        .from('prompts')
+        .select('id, text')
+        .order('created_at', { ascending: true })
+      
+      if (!error && data) {
+        setPrompts(data)
+      }
+    }
+    fetchPrompts()
   }, [])
 
   const randomThree = prompts
